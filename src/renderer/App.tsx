@@ -1,8 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 
-import 'tailwindcss/tailwind.css';
-
 /* Components */
 import BootLoader from './components/boot-loader';
 
