@@ -80,9 +80,13 @@ const createWindow = async () => {
     y: 50,
     icon: getAssetPath('icon.png'),
     webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      /*
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
+        */
     },
   });
   mainWindow.loadURL(resolveHtmlPath('index.html'));
