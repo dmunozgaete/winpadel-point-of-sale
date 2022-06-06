@@ -60,6 +60,21 @@ export class ConfigLoaderJob extends Job {
   }
 
   /**
+   * Resolve the url
+   * @param src url to resolve
+   * @returns string
+   */
+  resolveUrl(src: string) {
+    let resolvedUrl = src;
+    if (src.startsWith('assets')) {
+      resolvedUrl = path.join('file://', this.getDatabasePath(), src);
+    }
+
+    console.log('url:', src, 'resolved to:', resolvedUrl);
+    return resolvedUrl;
+  }
+
+  /**
    * Return if the environment is in debug or production
    * @returns boolean
    */

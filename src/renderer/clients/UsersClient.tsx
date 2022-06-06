@@ -22,6 +22,11 @@ export class UsersClient implements WithBootedClient {
           .on('finish', resolve);
       });
 
+      // Resolve Url or Src
+      results.forEach((user: IUser) => {
+        user.image = ConfigLoaderJob.resolveUrl(user.image);
+      });
+
       return results;
     } catch (ex) {
       chariot.error(ex as any);

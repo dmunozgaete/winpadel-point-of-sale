@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card, Row, Col } from 'antd';
 import UsersClient, { IUser } from 'renderer/clients/UsersClient';
+import moment from 'moment';
+import IJwtEntity from 'renderer/models/IJwtEntity';
 import styles from './index.module.scss';
 import IJwt from '../../models/IJwt';
 import EventStreamer from '../../lib/EventStreamer';
@@ -48,23 +50,39 @@ export default class SignInPage extends React.Component<IProps, IState> {
   };
 
   onDeepLinkSSOCallbackHandler = async (provider: string, jwt: IJwt) => {
-    await AuthenticationClient.authenticate(provider, {
-      access_token: jwt.access_token,
-      expires_in: jwt.expires_in,
-      token_type: jwt.token_type,
-    });
-
+    await AuthenticationClient.authenticate(provider, jwt);
     const { onAuthenticated } = this.props;
     onAuthenticated(jwt);
   };
 
-  onAuthenticateHandler = async () => {
-    const jwt = {
-      access_token:
-        'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcmltYXJ5c2lkIjoiNGE0NDEzMTg1NGM4YWU3ZmI3ZTRhNjkxZWRlNmEyMmUiLCJ1bmlxdWVfbmFtZSI6IkRhdmlkIE11w7FveiIsImVtYWlsIjoiZG11bm96Z2FldGVAZ21haWwuY29tIiwiY291bnRyeSI6IkNMIiwiYXZhdGFyIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EtL0FBdUU3bUNDalFEQmVJeXFtWkdWS19BMlZMcjZyS2dUdzlnSFRTMk0wTjg0R0E9czk2LWMiLCJncm91cHNpZCI6IlVTRVIiLCJpc3MiOiJTaW5nbGVTaWduT24iLCJ0eXBlIjoiQmVhcmVyIiwiYXVkIjoiV2ViIiwic2NvcGUiOiI3MjU3MjcxOTE1NzE3MjAzNDM3MzQ6b3duZXIgMTUzMTc2NDYxNTczNTcwNTUyMDAwOm93bmVyIDE1MzE3NjQ2MTU3MzU3MDU1MTg0Njpvd25lciA3MjU3MjcxOTE1NzE3MjAzNDM3MzU6b3duZXIgNzE1ODkwODgxNTg0ODE5NjkzNjkyOm93bmVyIDEwMTAxMDEwMTAxMDEwMTAxMDEwMTpvd25lciAxMDEwMTAxMDEwMTAxMDEwMTAxMDE6ZGV2ZWxvcGVyIDEwMTAxMDEwMTAxMDEwMTAxMDEwMTpzaG9wcGVyIDEwMTAxMDEwMTAxMDEwMTAxMDEwMTphcCAxMDEwMTAxMDEwMTAxMDEwMTAxMDE6bGF0IDkxNzI3ODEwMTU4NTc1NjcwMTg2MTpvd25lciA1Nzk3NzY5MjE1ODc1NzU0MTgzOTk6b3duZXIgMTQxNzg5NjQxNTg1NzU2ODY3Mjc5Om93bmVyIDc4ODA4MDQ1MTU4NzU3NTUwMjAyNzpvd25lciA3NzM2OTkzNDE1ODc1NzU1NjE4OTQ6b3duZXIgMjc1MTcwODExNTg3NTc1NjI1NDcwOm93bmVyIDYzNzYxNjA1MTU4NzU3NTY3MDk0MDpvd25lciA1NTIzODMzNzE1ODc1NzUzMTY0NzQ6b3duZXIgMTUzMTc2NDYxNTczNTcwNTUxODEwOm93bmVyIDIwMjAyMDIwMjAyMDIwMjAyMDIwMjpvd25lciIsImlhdCI6MTYwOTg3NjU2NSwiZXhwIjoxNjE3NjUyNTY1fQ.DuvoS5CODHezmOaG2wX10k1Cjt1HBGDCXyqwgn_2jchbQ-SNeTJAP56d-xxRXlNEFx1TW2hnFqFAGs7HHa-rlSg9i939dNiEfCFbJrICdMNdHgk6R5Zd2HD-HiJw1ADImPD1h1_77JyXmaEKE5Cx0hFu1M4yluC09shKqWJW2c4',
-      expires_in: 1111,
+  onAuthenticateHandler = async (user: IUser) => {
+    // Simulate Jwt Payload
+    const payload = [
+      Buffer.from(
+        JSON.stringify({
+          alg: 'RS256',
+          typ: 'JWT',
+        })
+      ).toString('base64url'),
+      Buffer.from(
+        JSON.stringify({
+          primarysid: user.id,
+          avatar: user.image,
+          unique_name: user.name,
+          country: 'CL',
+        } as IJwtEntity)
+      ).toString('base64url'),
+      Buffer.from('signature_dummy').toString('base64url'),
+    ].join('.');
+
+    // Simulate Jwt
+    const jwt: IJwt = {
+      access_token: payload,
+      expires_in: moment(new Date()).add(1, 'y').toDate().getTime(),
       token_type: 'Bearer',
     };
+
+    // Simulate "external url Callback"
     this.onDeepLinkSSOCallbackHandler('local', jwt);
   };
 
@@ -84,6 +102,7 @@ export default class SignInPage extends React.Component<IProps, IState> {
           return (
             <Col span={4} key={user.id}>
               <Card
+                onClick={() => this.onAuthenticateHandler(user)}
                 hoverable
                 style={{ borderRadius: '10px' }}
                 cover={

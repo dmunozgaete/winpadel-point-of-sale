@@ -80,6 +80,7 @@ const createWindow = async () => {
     y: 50,
     icon: getAssetPath('icon.png'),
     webPreferences: {
+      webSecurity: false,
       nodeIntegration: true,
       contextIsolation: false,
       /*

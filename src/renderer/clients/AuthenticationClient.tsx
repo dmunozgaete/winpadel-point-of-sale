@@ -3,8 +3,16 @@ import IJwt from '../models/IJwt';
 import IJwtEntity from '../models/IJwtEntity';
 
 const storageName = '@user';
-let decodedJwt: any;
+let decodedJwt: IJwtEntity;
 let rawJwt: IJwt;
+
+export async function getAuthFromCache() {
+  const cacheAuth = await localStorage.getItem(storageName);
+  if (cacheAuth) {
+    return JSON.parse(cacheAuth!);
+  }
+  return null;
+}
 
 interface IState {
   isAuthenticated: boolean;
@@ -18,7 +26,21 @@ class AuthenticationClient extends WithBootedClient {
     provider: '',
   };
 
-  async boot() {}
+  async boot() {
+    const newState = await getAuthFromCache();
+    if (newState) {
+      this.setState(newState);
+      rawJwt = newState.user;
+      // decodedJwt = jwt.decode(rawJwt.access_token);
+
+      // Simulate decoding
+      const payload = Buffer.from(
+        rawJwt.access_token.split('.')[1],
+        'base64url'
+      ).toString('utf8');
+      decodedJwt = JSON.parse(payload);
+    }
+  }
 
   isAuthenticated(): boolean {
     return this.state.isAuthenticated;
@@ -40,10 +62,11 @@ class AuthenticationClient extends WithBootedClient {
       provider,
     });
 
-    localStorage.setItem(storageName, JSON.stringify(this.state));
+    // Persist
+    // localStorage.setItem(storageName, JSON.stringify(this.state));
   }
 
-  hasRole(rolesToFind: Array<String> | String) {
+  hasRole(rolesToFind: Array<string> | string) {
     const rolesForCheck = Array.isArray(rolesToFind)
       ? rolesToFind
       : [rolesToFind];
