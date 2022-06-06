@@ -24,9 +24,14 @@ export default abstract class Job implements WithBootedClient {
 
   async boot() {
     const waitBeforeRun = (this.config.waitBeforeFirstRunInSeconds || 0) * 1000;
-    setTimeout(() => {
-      this.run();
-    }, waitBeforeRun);
+    if (waitBeforeRun === 0) {
+      // Start inmediately
+      await this.run();
+    } else {
+      setTimeout(() => {
+        this.run();
+      }, waitBeforeRun);
+    }
   }
 
   /**
@@ -65,7 +70,7 @@ export default abstract class Job implements WithBootedClient {
       throw ex;
     } finally {
       setTimeout(() => {
-        console.log('start job');
+        // console.log('start job');
         this.run();
       }, runEveryInSeconds * 1000);
     }

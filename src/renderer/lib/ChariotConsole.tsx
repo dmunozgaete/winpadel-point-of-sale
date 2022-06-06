@@ -36,11 +36,22 @@ class ChariotConsole {
     console.log(`👀[${timestamp} • ${label}] ${message}`, ...optionalParams);
   }
 
-  error(message: string, ...optionalParams: any[]) {
+  error(message: string | Error, ...optionalParams: any[]) {
     const { label } = this.config;
     const timestamp = this.getDate(new Date());
 
-    console.error(`😔[${timestamp} • ${label}] ${message}`, ...optionalParams);
+    if (message instanceof Error) {
+      console.error(
+        `😔[${timestamp} • ${label}] ${message.message}`,
+        message.name,
+        message.stack
+      );
+    } else {
+      console.error(
+        `😔[${timestamp} • ${label}] ${message}`,
+        ...optionalParams
+      );
+    }
   }
 
   warn(message: string, ...optionalParams: any[]) {

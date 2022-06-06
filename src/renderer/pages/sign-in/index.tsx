@@ -1,4 +1,7 @@
 import React from 'react';
+import { Card, Row, Col } from 'antd';
+import UsersClient, { IUser } from 'renderer/clients/UsersClient';
+import styles from './index.module.scss';
 import IJwt from '../../models/IJwt';
 import EventStreamer from '../../lib/EventStreamer';
 import i18n from '../../lib/i18n';
@@ -12,11 +15,15 @@ interface IProps {
 }
 interface IState {
   version: string;
+  view_mode: 'LOADING' | 'USERS_LIST';
+  users?: IUser[];
 }
 
 export default class SignInPage extends React.Component<IProps, IState> {
   state: IState = {
-    version: '1.0.1',
+    version: process.env.npm_package_version || 'x.x.x',
+    view_mode: 'LOADING',
+    users: undefined,
   };
 
   componentDidMount() {
@@ -24,7 +31,21 @@ export default class SignInPage extends React.Component<IProps, IState> {
       'DEEPLINK:SSO_CALLBACK',
       this.onDeepLinkSSOCallbackHandler
     );
+
+    this.getUsers();
   }
+
+  getUsers = async () => {
+    try {
+      const users = await UsersClient.getUsers();
+      this.setState({
+        view_mode: 'USERS_LIST',
+        users,
+      });
+    } catch (ex) {
+      console.error(ex);
+    }
+  };
 
   onDeepLinkSSOCallbackHandler = async (provider: string, jwt: IJwt) => {
     await AuthenticationClient.authenticate(provider, {
@@ -47,40 +68,71 @@ export default class SignInPage extends React.Component<IProps, IState> {
     this.onDeepLinkSSOCallbackHandler('local', jwt);
   };
 
+  render_LOADING = () => {
+    return (
+      <>
+        <span>{localize('loading_users')}</span>
+      </>
+    );
+  };
+
+  render_USERS_LIST = () => {
+    const { users } = this.state;
+    return (
+      <>
+        {users!.map((user) => {
+          return (
+            <Col span={4} key={user.id}>
+              <Card
+                hoverable
+                style={{ borderRadius: '10px' }}
+                cover={
+                  <img
+                    alt={user.name}
+                    src={user.image}
+                    style={{
+                      padding: '20px',
+                      height: '250px',
+                    }}
+                  />
+                }
+              >
+                <Card.Meta title={user.name} style={{ textAlign: 'center' }} />
+              </Card>
+            </Col>
+          );
+        })}
+      </>
+    );
+  };
+
   render() {
-    const { version } = this.state;
+    const { version, view_mode } = this.state;
 
     return (
-      <div className="signin-page">
-        <div>
-          <div className="flex overflow-hidden">
-            <img
-              className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
-              src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-              alt=""
-            />
-            <img
-              className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
-              src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-              alt=""
-            />
-            <img
-              className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
-              src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.25&w=256&h=256&q=80"
-              alt=""
-            />
-            <img
-              className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-              alt=""
-            />
-          </div>
-
+      <div className={styles.page}>
+        <Row
+          style={{ height: '20%' }}
+          className={styles.who_is_there}
+          justify="center"
+        >
+          <span>{localize('who_is_there')}</span>
+        </Row>
+        <Row style={{ height: '60%' }} justify="space-evenly" align="middle">
+          {(() => {
+            const customRender: Function = (this as any)[`render_${view_mode}`];
+            if (!customRender) {
+              return <div>{view_mode}</div>;
+            }
+            return customRender();
+          })()}
+        </Row>
+        <Row style={{ height: '20%' }}>
           {/* Version */}
-          <div>
+          <div className={styles.app_version}>
             <span>v{version}</span>
           </div>
-        </div>
+        </Row>
       </div>
     );
   }

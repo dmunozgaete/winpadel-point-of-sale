@@ -1,6 +1,5 @@
 const LOCALES = {
-  LOGIN_WITH_GOOGLE: 'Ingresar con Google',
-  WELCOME_TITLE:
-    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed don ull',
+  who_is_there: '¿Quién eres?',
+  loading_users: 'Obteniendo usuarios...',
 };
 export default LOCALES;

@@ -1,10 +1,7 @@
 {
-  "description": "A foundation for scalable desktop apps",
+  "description": "Electron Boilerplate",
+  "version": "1.0.1",
   "keywords": [],
-  "homepage": "https://github.com/electron-react-boilerplate/electron-react-boilerplate#readme",
-  "bugs": {
-    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
-  },
   "license": "MIT",
   "author": {
     "name": "David Munoz Gaete",
@@ -55,6 +52,8 @@
     ]
   },
   "dependencies": {
+    "antd": "^4.20.7",
+    "csv-parser": "^3.0.0",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.7",
     "electron-updater": "^5.0.1",

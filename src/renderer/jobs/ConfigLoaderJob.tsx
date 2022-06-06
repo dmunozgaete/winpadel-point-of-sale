@@ -32,7 +32,7 @@ export class ConfigLoaderJob extends Job {
   constructor() {
     super({
       runEveryInSeconds: 2147483, // each 24 days
-      waitBeforeFirstRunInSeconds: 1,
+      waitBeforeFirstRunInSeconds: 0,
     });
   }
 

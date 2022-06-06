@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 
+import 'antd/dist/antd.css';
+
 /* Components */
 import BootLoader from './components/boot-loader';
 

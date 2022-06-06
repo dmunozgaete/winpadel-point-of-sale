@@ -1,0 +1,18 @@
+.page {
+  background-color: white;
+  height: 100%;
+  position: relative;
+}
+
+.who_is_there {
+  font-weight: bold;
+  font-size: 4em;
+  padding: 0.5em;
+}
+
+.app_version {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.8;
+}

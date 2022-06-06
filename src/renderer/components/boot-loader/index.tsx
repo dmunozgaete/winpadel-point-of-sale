@@ -32,19 +32,22 @@ export default class BootLoader extends React.Component<IProps, IState> {
     // replace with the new one without the "deleted documents"
     // - https://github.com/pouchdb/pouchdb/issues/7598
 
-    // Job's Boot
-    Object.keys(JobList).forEach((key: string) => {
-      const job: Job = (JobList as Record<string, Job>)[key];
-      job.boot();
-    });
-
     // Set the language
     const language = SettingsClient.get('LANGUAGE', 'es');
     console.log('language', language);
     setLocale(language);
 
+    // Job's Boot
+    const promisesToWait: Promise<void>[] = [];
+    Object.keys(JobList).forEach((key: string) => {
+      const job: Job = (JobList as Record<string, Job>)[key];
+      promisesToWait.push(job.boot());
+    });
+
     const { onLoadComplete } = this.props;
-    onLoadComplete({});
+    Promise.all(promisesToWait)
+      .then(() => onLoadComplete({}))
+      .catch((ex) => console.error(ex));
   }
 
   render() {
