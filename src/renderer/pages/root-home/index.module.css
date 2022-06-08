@@ -144,6 +144,18 @@
   margin-right: 16px;
 }
 
+.layout__sider_empty_cart {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+}
+
+.layout__sider_empty_cart > img {
+  width: 70%;
+}
+
 .layout__sider__title {
   composes: layout__content__user;
   padding-left: 0px;
@@ -192,7 +204,6 @@
 }
 
 .cart_item__actions__quantity {
-
   font-size: 1.3em;
   line-height: 1.3em;
   width: 44px;

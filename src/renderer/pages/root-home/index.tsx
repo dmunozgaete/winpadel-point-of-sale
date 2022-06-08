@@ -1,4 +1,5 @@
 import React from 'react';
+import EmptyCart from 'img/empty-cart.png';
 import {
   Layout,
   Card,
@@ -315,6 +316,12 @@ export default class RootHomePage extends React.Component<{}, IState> {
                   );
                 })}
               </List>
+
+              {totalProducts === 0 ? (
+                <div className={styles.layout__sider_empty_cart}>
+                  <img src={EmptyCart} alt="" />
+                </div>
+              ) : null}
             </Layout.Content>
             <Layout.Footer className={styles.layout__sider__footer}>
               <div className={styles.layout__sider__footer__resume}>
