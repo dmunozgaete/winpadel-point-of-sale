@@ -1,3 +1,13 @@
-Product;Price;Stock;Image
-Sprite Zero;900;140;https://jumbo.vtexassets.com/arquivos/ids/456059-450-450
-Redbull Zero;1500;redbull-zero.webp
+id;name;stock;price;image
+1;Pepe Spring Sugar;1200;1500;https://jumbo.vtexassets.com/arquivos/ids/456059-450-450
+2;2 Redbull Zero;10;1500;assets/products/redbull-zero.webp
+3;3 Sprite Zero;140;900;https://jumbo.vtexassets.com/arquivos/ids/456059-450-450
+4;4 Redbull Zero;10;1500;assets/products/redbull-zero.webp
+5;5 Sprite Zero;140;900;https://jumbo.vtexassets.com/arquivos/ids/456059-450-450
+6;6 Redbull Zero;10;1500;assets/products/redbull-zero.webp
+7;7 Sprite Zero;140;900;https://jumbo.vtexassets.com/arquivos/ids/456059-450-450
+8;8 Redbull Zero;10;1500;assets/products/redbull-zero.webp
+9;9 Sprite Zero;140;900;https://jumbo.vtexassets.com/arquivos/ids/456059-450-450
+10;10 Redbull Zero;10;1500;assets/products/redbull-zero.webp
+11;11 Sprite Zero;140;900;https://jumbo.vtexassets.com/arquivos/ids/456059-450-450
+12;12 Sprite Zero;140;900;https://jumbo.vtexassets.com/arquivos/ids/456059-450-450

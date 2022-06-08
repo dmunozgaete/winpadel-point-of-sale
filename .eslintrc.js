@@ -19,6 +19,7 @@ module.exports = {
     'react/state-in-constructor': ['off', 'never'],
     'class-methods-use-this': 'off',
     'no-debugger': 'off',
+    radix: 'off',
     'no-console': 'off',
     '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/naming-convention': [

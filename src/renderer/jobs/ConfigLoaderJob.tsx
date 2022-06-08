@@ -1,5 +1,6 @@
 import os from 'os';
 import path from 'path';
+import fs from 'fs';
 import ChariotConsole from '../lib/ChariotConsole';
 import Job from '../lib/Job';
 
@@ -52,11 +53,19 @@ export class ConfigLoaderJob extends Job {
   }
 
   /**
-   * Get database full path
+   * Get users database path
    * @returns string
    */
   getUsersFilePath() {
     return path.join(this.appConfig.database_path, USERS_FILENAME);
+  }
+
+  /**
+   * Get products database path
+   * @returns string
+   */
+  getProductsFilePath() {
+    return path.join(this.appConfig.database_path, PRODUCTS_FILENAME);
   }
 
   /**
@@ -68,6 +77,10 @@ export class ConfigLoaderJob extends Job {
     let resolvedUrl = src;
     if (src.startsWith('assets')) {
       resolvedUrl = path.join('file://', this.getDatabasePath(), src);
+      const exists = fs.existsSync(resolvedUrl);
+      if (!exists) {
+        console.log('dont exists');
+      }
     }
 
     console.log('url:', src, 'resolved to:', resolvedUrl);

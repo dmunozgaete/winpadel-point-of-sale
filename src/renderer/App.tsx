@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 
 import 'antd/dist/antd.css';
 
@@ -13,6 +13,7 @@ import SettingsClient from './clients/SettingsClient';
 /* Core Pages */
 
 import SignInPage from './pages/sign-in';
+import RootHomePage from './pages/root-home';
 
 interface PageState {
   booting: boolean;
@@ -98,11 +99,14 @@ export default class App extends React.Component<{}, PageState> {
       return <SignInPage onAuthenticated={this.onAuthenticatedHandler} />;
     }
 
-    // const { sidebar_collapsed } = this.state;
     return (
-      <div>
-        <div>dwdwdwd</div>
+      <>
         <Router>
+          <Routes>
+            <Route path="/" element={<RootHomePage />}>
+              <Route path="test/:id" element={<div>test</div>} />
+            </Route>
+          </Routes>
           {/*  <Switch>
           <Route path="/" component={RootHomePage} exact />
           <Route path="/flows" component={FlowReadPage} exact />
@@ -111,7 +115,7 @@ export default class App extends React.Component<{}, PageState> {
           <Route path="/users" component={UsersReadPage} exact />
         </Switch> */}
         </Router>
-      </div>
+      </>
     );
   }
 }

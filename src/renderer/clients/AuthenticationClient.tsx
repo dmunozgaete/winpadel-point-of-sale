@@ -62,6 +62,13 @@ class AuthenticationClient extends WithBootedClient {
       provider,
     });
 
+    // Simulate decoding
+    const payload = Buffer.from(
+      jwt.access_token.split('.')[1],
+      'base64url'
+    ).toString('utf8');
+    decodedJwt = JSON.parse(payload);
+
     // Persist
     // localStorage.setItem(storageName, JSON.stringify(this.state));
   }
