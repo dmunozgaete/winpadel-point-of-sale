@@ -68,6 +68,31 @@ export default class RootHomePage extends React.Component<{}, IState> {
     });
   };
 
+  onSumToCartItemHandler = async (productItem: IProductCart) => {
+    const { cart } = this.state;
+    productItem.quantity += 1;
+    this.setState({
+      cart,
+    });
+  };
+
+  onReduceToCartItemHandler = async (productItem: IProductCart) => {
+    const { cart } = this.state;
+    productItem.quantity -= 1;
+    if (productItem.quantity <= 0) {
+      delete cart[productItem.id];
+    }
+    this.setState({
+      cart,
+    });
+  };
+
+  onCleanCartHandler = async () => {
+    this.setState({
+      cart: {},
+    });
+  };
+
   render_LOADING = () => {
     return (
       <div className={styles.container}>
@@ -241,7 +266,7 @@ export default class RootHomePage extends React.Component<{}, IState> {
                             flexDirection: 'column',
                             justifyContent: 'center',
                             paddingLeft: '12px',
-                            width: 'calc(100% - 144px)',
+                            width: 'calc(100% - 156px)',
                           }}
                         >
                           <div className={styles.cart_item__name}>
@@ -260,7 +285,12 @@ export default class RootHomePage extends React.Component<{}, IState> {
                         >
                           <div className={styles.cart_item__actions}>
                             <Button
+                              type="primary"
+                              ghost
                               size="small"
+                              onClick={() =>
+                                this.onSumToCartItemHandler(productCart)
+                              }
                               shape="circle"
                               icon={<PlusOutlined />}
                             />
@@ -270,7 +300,11 @@ export default class RootHomePage extends React.Component<{}, IState> {
                               {productCart.quantity}
                             </div>
                             <Button
+                              danger
                               size="small"
+                              onClick={() =>
+                                this.onReduceToCartItemHandler(productCart)
+                              }
                               shape="circle"
                               icon={<MinusOutlined />}
                             />
@@ -288,24 +322,28 @@ export default class RootHomePage extends React.Component<{}, IState> {
                   <Col
                     className={styles.layout__sider__footer__resume__col_names}
                   >
-                    Total Productos:
+                    {localize('total_products')}:
                   </Col>
                   <Col
                     className={styles.layout__sider__footer__resume__col_values}
                   >
-                    {NumberFormatter.toNumber(totalProducts)}
+                    {totalProducts === 0
+                      ? '-'
+                      : NumberFormatter.toNumber(totalProducts)}
                   </Col>
                 </Row>
                 <Row className={styles.layout__sider__footer__resume__row}>
                   <Col
                     className={styles.layout__sider__footer__resume__col_names}
                   >
-                    Total (CLP):
+                    {localize('total_amount')}:
                   </Col>
                   <Col
                     className={styles.layout__sider__footer__resume__col_values}
                   >
-                    {NumberFormatter.toCurrency(totalPrice)}
+                    {totalProducts === 0
+                      ? '-'
+                      : NumberFormatter.toCurrency(totalPrice)}
                   </Col>
                 </Row>
               </div>
@@ -314,6 +352,7 @@ export default class RootHomePage extends React.Component<{}, IState> {
                 className={styles.layout__sider__footer__actions}
               >
                 <Button
+                  disabled={totalProducts === 0}
                   className={styles.layout__sider__footer__actions__button}
                   type="primary"
                   danger
@@ -321,7 +360,17 @@ export default class RootHomePage extends React.Component<{}, IState> {
                   icon={<ShoppingOutlined />}
                   size="large"
                 >
-                  Finalizar Compra
+                  {localize('finish_payment')}
+                </Button>
+
+                <Button
+                  onClick={() => this.onCleanCartHandler()}
+                  disabled={totalProducts === 0}
+                  shape="round"
+                  type="text"
+                  size="large"
+                >
+                  Limpiar
                 </Button>
               </div>
             </Layout.Footer>
