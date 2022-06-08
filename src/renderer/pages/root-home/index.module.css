@@ -145,11 +145,12 @@
 }
 
 .layout__sider_empty_cart {
+  composes: unselecteable;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.5;
+  opacity: 0.2;
 }
 
 .layout__sider_empty_cart > img {

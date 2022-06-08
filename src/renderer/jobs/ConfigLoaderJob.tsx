@@ -7,6 +7,7 @@ import Job from '../lib/Job';
 const CONFIGURATION_FOLDER = 'winpadel';
 const DATABASE_FOLDER = 'db';
 const ASSETS_FOLDER = 'assets';
+const ORDERS_FOLDER = 'orders';
 const USERS_FILENAME = 'users.csv';
 const PRODUCTS_FILENAME = 'products.csv';
 
@@ -17,6 +18,7 @@ interface IConfiguration {
   assets_path: string;
   users_path: string;
   products_path: string;
+  orders_path: string;
   is_debug: boolean;
 }
 
@@ -27,6 +29,7 @@ export class ConfigLoaderJob extends Job {
     assets_path: '',
     users_path: '',
     products_path: '',
+    orders_path: '',
     is_debug: process.env.NODE_ENV === 'development',
   };
 
@@ -57,7 +60,7 @@ export class ConfigLoaderJob extends Job {
    * @returns string
    */
   getUsersFilePath() {
-    return path.join(this.appConfig.database_path, USERS_FILENAME);
+    return this.appConfig.users_path;
   }
 
   /**
@@ -65,7 +68,15 @@ export class ConfigLoaderJob extends Job {
    * @returns string
    */
   getProductsFilePath() {
-    return path.join(this.appConfig.database_path, PRODUCTS_FILENAME);
+    return this.appConfig.products_path;
+  }
+
+  /**
+   * Get Orders database path
+   * @returns string
+   */
+  getOrdersPath() {
+    return this.appConfig.orders_path;
   }
 
   /**
@@ -124,6 +135,11 @@ export class ConfigLoaderJob extends Job {
     this.appConfig.products_path = path.join(
       this.appConfig.database_path,
       PRODUCTS_FILENAME
+    );
+
+    this.appConfig.orders_path = path.join(
+      this.appConfig.database_path,
+      ORDERS_FOLDER
     );
 
     chariot.log('application config:', this.appConfig);

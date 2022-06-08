@@ -1,5 +1,5 @@
 import React from 'react';
-import EmptyCart from 'img/empty-cart.png';
+import EmptyCart from 'assets/empty-cart.png';
 import {
   Layout,
   Card,
@@ -23,6 +23,8 @@ import ProductsClient, {
   IProductCart,
 } from 'renderer/clients/ProductsClient';
 import NumberFormatter from 'renderer/lib/formatters/NumberFormatter';
+import OrdersClient from 'renderer/clients/OrdersClient';
+import moment from 'moment';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
@@ -91,6 +93,26 @@ export default class RootHomePage extends React.Component<{}, IState> {
   onCleanCartHandler = async () => {
     this.setState({
       cart: {},
+    });
+  };
+
+  onCheckoutClickHandler = async () => {
+    const { cart } = this.state;
+    let totalProducts = 0;
+    let totalPrice = 0;
+
+    Object.keys(cart).forEach((sku: string) => {
+      const productCart: IProductCart = cart[sku];
+      totalPrice += productCart.quantity * productCart.price;
+      totalProducts += productCart.quantity;
+    });
+
+    OrdersClient.saveOrder({
+      time: moment().format('hh:mm:ss'),
+      id: moment().format('hh.mm.ss'),
+      total_price: totalPrice,
+      total_products: totalProducts,
+      detail_path: '',
     });
   };
 
@@ -359,6 +381,7 @@ export default class RootHomePage extends React.Component<{}, IState> {
                 className={styles.layout__sider__footer__actions}
               >
                 <Button
+                  onClick={() => this.onCheckoutClickHandler()}
                   disabled={totalProducts === 0}
                   className={styles.layout__sider__footer__actions__button}
                   type="primary"
@@ -377,7 +400,7 @@ export default class RootHomePage extends React.Component<{}, IState> {
                   type="text"
                   size="large"
                 >
-                  Limpiar
+                  {localize('clean_cart')}
                 </Button>
               </div>
             </Layout.Footer>

@@ -8,5 +8,6 @@ const LOCALES = {
   total_products: 'Total productos',
   total_amount: 'Monto total',
   finish_payment: 'Finalizar Compra',
+  clean_cart: 'Limpiar',
 };
 export default LOCALES;
