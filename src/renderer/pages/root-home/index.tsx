@@ -25,12 +25,9 @@ import ProductsClient, {
 } from 'renderer/clients/ProductsClient';
 import NumberFormatter from 'renderer/lib/formatters/NumberFormatter';
 import OrdersClient from 'renderer/clients/OrdersClient';
-import moment from 'moment';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
-
-// const chariot = ChariotConsole({ label: 'root-home' });
 
 const localize = i18n(locales);
 interface IState {
