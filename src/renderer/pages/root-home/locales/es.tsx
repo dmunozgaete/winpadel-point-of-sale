@@ -5,9 +5,12 @@ const LOCALES = {
   cart_title: 'Carrito de Compra',
   cart_subtitle: 'Productos de la orden actual',
 
-  total_products: 'Total productos',
-  total_amount: 'Monto total',
+  total_products: 'Productos',
+  total_amount: 'Total',
   finish_payment: 'Finalizar Compra',
   clean_cart: 'Limpiar',
+
+  save_notification_message: 'Orden Guardada',
+  save_notification_description: 'La orden ha sido guardada correctamente.',
 };
 export default LOCALES;

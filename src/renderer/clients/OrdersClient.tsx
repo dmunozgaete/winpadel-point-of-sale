@@ -5,6 +5,7 @@ import path from 'path';
 import ChariotConsole from '../lib/ChariotConsole';
 import WithBootedClient from '../lib/WithBootedClient';
 import ConfigLoaderJob from '../jobs/ConfigLoaderJob';
+import { IProductCart } from './ProductsClient';
 
 const chariot = ChariotConsole({ label: 'orders-client' });
 const ORDER_FILE_TEMPLATE = 'day-orders.csv';
@@ -12,40 +13,90 @@ const ORDER_FILE_TEMPLATE = 'day-orders.csv';
 export class OrdersClient implements WithBootedClient {
   async boot() {}
 
-  resolverOrderFilePath(day?: Date): string {
-    const dayOfOrder = moment(day || new Date()).add(-2, 'h');
+  resolverOrderFilePath(day: moment.Moment): string {
     const folderPath = ConfigLoaderJob.getOrdersPath();
-    const dayOrdersFolderName = dayOfOrder.format('YYYY-MM-DD');
+    const dayOrdersFolderName = day.format('YYYY-MM-DD');
 
     return path.join(folderPath, dayOrdersFolderName, ORDER_FILE_TEMPLATE);
   }
 
-  async saveOrder(order: IOrder): Promise<void> {
+  async saveOrder(cart: Record<string, IProductCart>): Promise<void> {
     try {
-      // Create or Get the order File
-      const csvPath = this.resolverOrderFilePath();
-
-      const values: string[] = [];
+      const dayOfOrder = moment(new Date()).add(-2, 'h');
+      const timeOfOrder = moment();
+      const orderId = timeOfOrder.format('YYYYMMDD[T]hhmmss');
+      const csvPath = this.resolverOrderFilePath(dayOfOrder);      
       const folderPath = path.dirname(csvPath);
-      order.detail_path = path.join(folderPath, `order-${order.id}.csv`);
+      const detailFilePath = path.join(folderPath, `${orderId}.csv`);
+      let hasResumeHeaders = true;
+      let hasDetailHeaders = true;
+      let totalProducts = 0;
+      let totalPrice = 0;
 
+      // ------------------------------------------------------
+      // Create the folder structure
       if (!fs.existsSync(folderPath)) {
+        hasResumeHeaders = false;
         fs.mkdirSync(folderPath, { recursive: true });
-        // Add Headers
-        fs.appendFileSync(csvPath, `${Object.keys(order).join(';')}\n`);
+      }
+      // ------------------------------------------------------
+
+      // ----------------------------------------------
+      // --[ Save the detailed order into a file
+
+      // Check if we need headers
+      if (!fs.existsSync(detailFilePath)) {
+        hasDetailHeaders = false;
       }
 
-      // ----------------------------------------------
-      // Save the orders in the global day resume
-      Object.keys(order).forEach((key) => {
-        values.push((order as any)[key]);
+      // Iterate each product in the cart
+      Object.keys(cart).forEach((sku: string) => {
+        const productCart: IProductCart = cart[sku];
+        totalPrice += productCart.quantity * productCart.price;
+        totalProducts += productCart.quantity;
+
+        // Add header if needed
+        if (!hasDetailHeaders) {
+          fs.appendFileSync(detailFilePath, `${Object.keys(productCart).join(';')}\n`);
+          hasDetailHeaders = true;
+        }
+
+        // Add Product
+        const productInCsvFormat: string[] = [];
+        Object.keys(productCart).forEach((key) => {
+          productInCsvFormat.push((productCart as any)[key]);
+        });
+
+        // Save the detailed file
+        fs.appendFileSync(detailFilePath, `${productInCsvFormat.join(';')}\n`);
       });
-      fs.appendFileSync(csvPath, `${values.join(';')}\n`);
       // ----------------------------------------------
 
+      const order: IOrder = {
+        id: orderId,
+        time: timeOfOrder.format('YYYY-MM-DDThh:mm:ss'),
+        total_price: totalPrice,
+        total_products: totalProducts,
+        detail_path: detailFilePath,
+      };
+
       // ----------------------------------------------
-      // Now save the detail ^^ (product list and detail)
-      fs.appendFileSync(order.detail_path, order.detail_path);
+      // --[ Save the orders in the global day resume
+
+       // Add header if needed
+      if (!hasResumeHeaders) {
+        fs.appendFileSync(csvPath, `${Object.keys(order).join(';')}\n`);
+        hasResumeHeaders = true;
+      }
+
+      // Add the resume 
+      const resumeInCsvFormat: string[] = [];
+      Object.keys(order).forEach((key) => {
+        resumeInCsvFormat.push((order as any)[key]);
+      });
+
+      // Save the resume file
+      fs.appendFileSync(csvPath, `${resumeInCsvFormat.join(';')}\n`);
       // ----------------------------------------------
     } catch (ex) {
       chariot.error(ex as any);

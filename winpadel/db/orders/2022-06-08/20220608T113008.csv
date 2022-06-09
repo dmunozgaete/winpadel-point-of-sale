@@ -1,0 +1,5 @@
+id;name;stock;price;image;quantity
+289196;Bebida Isotónica sabor manzana 1 L;10;1350;file:/Users/davidmunozgaete/Documents/Git/winpadel/point-of-sale-app/winpadel/db/assets/products/289196.jpeg;1
+395525;Bebida Isotónica sabor lima limón 1 L;10;1350;file:/Users/davidmunozgaete/Documents/Git/winpadel/point-of-sale-app/winpadel/db/assets/products/395525.jpeg;1
+470793;Bebida Coca-Cola sin azúcar 591 ml;10;1100;file:/Users/davidmunozgaete/Documents/Git/winpadel/point-of-sale-app/winpadel/db/assets/products/470793.webp;1
+477462;Bebida energética RED BULL Sugar Free lata 250 cc;10;1450;file:/Users/davidmunozgaete/Documents/Git/winpadel/point-of-sale-app/winpadel/db/assets/products/477462.webp;1

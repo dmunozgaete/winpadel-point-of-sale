@@ -10,6 +10,7 @@ import {
   Button,
   Row,
   Col,
+  notification,
 } from 'antd';
 import {
   PlusOutlined,
@@ -96,23 +97,14 @@ export default class RootHomePage extends React.Component<{}, IState> {
     });
   };
 
-  onCheckoutClickHandler = async () => {
-    const { cart } = this.state;
-    let totalProducts = 0;
-    let totalPrice = 0;
+  onCheckoutClickHandler = async (cart: Record<string, IProductCart>) => {
+    await OrdersClient.saveOrder(cart);
+    await this.onCleanCartHandler();
 
-    Object.keys(cart).forEach((sku: string) => {
-      const productCart: IProductCart = cart[sku];
-      totalPrice += productCart.quantity * productCart.price;
-      totalProducts += productCart.quantity;
-    });
-
-    OrdersClient.saveOrder({
-      time: moment().format('hh:mm:ss'),
-      id: moment().format('hh.mm.ss'),
-      total_price: totalPrice,
-      total_products: totalProducts,
-      detail_path: '',
+    notification.success({
+      message: localize('save_notification_message'),
+      description: localize('save_notification_description'),
+      placement: 'topLeft',
     });
   };
 
@@ -161,17 +153,18 @@ export default class RootHomePage extends React.Component<{}, IState> {
           return (
             <div key={product.id} style={{ display: 'inline-block' }}>
               <Card
+                bodyStyle={{padding: 16}}
                 className={[
                   styles.product_card,
                   cartItem ? styles['product_card--selected'] : '',
                 ].join(' ')}
                 onClick={() => this.onAddProductToCartHandler(product)}
                 hoverable
-                style={{ width: 210, margin: 10, borderRadius: 8 }}
+                style={{ width: 195, margin: 8, borderRadius: 8, minHeight: 211 }}
                 cover={
                   <div
                     style={{
-                      padding: '24px 24px 0px 24px',
+                      padding: '12px 12px 0px 12px',
                       textAlign: 'center',
                     }}
                   >
@@ -182,7 +175,7 @@ export default class RootHomePage extends React.Component<{}, IState> {
                       count={cartItem ? cartItem.quantity : 0}
                     />
                     <img
-                      style={{ maxHeight: 110, borderRadius: 8 }}
+                      style={{ maxHeight: 110, borderRadius: 8, maxWidth:'95%' }}
                       alt="example"
                       src={product.image}
                     />
@@ -381,7 +374,7 @@ export default class RootHomePage extends React.Component<{}, IState> {
                 className={styles.layout__sider__footer__actions}
               >
                 <Button
-                  onClick={() => this.onCheckoutClickHandler()}
+                  onClick={() => this.onCheckoutClickHandler(cart)}
                   disabled={totalProducts === 0}
                   className={styles.layout__sider__footer__actions__button}
                   type="primary"
