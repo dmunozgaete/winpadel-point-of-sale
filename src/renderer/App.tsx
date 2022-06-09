@@ -1,7 +1,9 @@
 import React from 'react';
+import {Button} from 'antd';
+import { ShopOutlined, UserSwitchOutlined, FundOutlined } from '@ant-design/icons';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
-
 import 'antd/dist/antd.css';
+import styles from './App.module.css';
 
 /* Components */
 import BootLoader from './components/boot-loader';
@@ -14,6 +16,9 @@ import SettingsClient from './clients/SettingsClient';
 
 import SignInPage from './pages/sign-in';
 import RootHomePage from './pages/root-home';
+import { Layout } from 'antd';
+import ConfigLoaderJob from './jobs/ConfigLoaderJob';
+import path from 'path';
 
 interface PageState {
   booting: boolean;
@@ -82,6 +87,7 @@ export default class App extends React.Component<{}, PageState> {
 
   render() {
     const { app_booting, booting, authenticated, is_first_time } = this.state;
+    const appLogo = path.join(ConfigLoaderJob.getDatabasePath(), 'assets', 'logo.png');
 
     if (app_booting) {
       return <div />;
@@ -101,20 +107,38 @@ export default class App extends React.Component<{}, PageState> {
 
     return (
       <>
-        <Router>
-          <Routes>
-            <Route path="/" element={<RootHomePage />}>
-              <Route path="test/:id" element={<div>test</div>} />
-            </Route>
-          </Routes>
-          {/*  <Switch>
-          <Route path="/" component={RootHomePage} exact />
-          <Route path="/flows" component={FlowReadPage} exact />
-          <Route path="/flows/create" component={FlowCreatePage} exact />
-          <Route path="/flows/update/:id" component={FlowUpdatePage} exact />
-          <Route path="/users" component={UsersReadPage} exact />
-        </Switch> */}
-        </Router>
+        <Layout>
+            <Layout.Sider className={styles.layout__sider} width={72}>
+              <Layout.Content>
+                <div className={styles.layout__sider__header}>
+                    <img src={`file://${appLogo}`} />
+                </div>
+                <div className={styles.layout__sider__buttons}>
+                  <Button className={styles.layout__sider__buttons__button} icon={<ShopOutlined />} size="large" type="primary" danger />
+                  <Button className={styles.layout__sider__buttons__button} icon={<FundOutlined />} size="large" type="link" danger />
+                  <Button className={styles.layout__sider__buttons__button} icon={<UserSwitchOutlined />} size="large" type="link" danger />
+                </div>
+              </Layout.Content>
+            </Layout.Sider>
+            <Layout>
+              <Layout.Content>
+                <Router>
+                  <Routes>
+                    <Route path="/" element={<RootHomePage />}>
+                      <Route path="test/:id" element={<div>test</div>} />
+                    </Route>
+                  </Routes>
+                  {/*  <Switch>
+                    <Route path="/" component={RootHomePage} exact />
+                    <Route path="/flows" component={FlowReadPage} exact />
+                    <Route path="/flows/create" component={FlowCreatePage} exact />
+                    <Route path="/flows/update/:id" component={FlowUpdatePage} exact />
+                    <Route path="/users" component={UsersReadPage} exact />
+                  </Switch> */}
+                </Router>
+              </Layout.Content>
+            </Layout>
+        </Layout>
       </>
     );
   }
