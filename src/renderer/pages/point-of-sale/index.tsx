@@ -36,7 +36,7 @@ interface IState {
   cart: Record<string, IProductCart>;
 }
 
-export default class RootHomePage extends React.Component<{}, IState> {
+export default class PointOfSalePage extends React.Component<{}, IState> {
   state: IState = {
     view_mode: 'LOADING',
     products: undefined,
@@ -101,7 +101,7 @@ export default class RootHomePage extends React.Component<{}, IState> {
     notification.success({
       message: localize('save_notification_message'),
       description: localize('save_notification_description'),
-      placement: 'topLeft',
+      placement: 'bottomLeft',
     });
   };
 
@@ -150,14 +150,19 @@ export default class RootHomePage extends React.Component<{}, IState> {
           return (
             <div key={product.id} style={{ display: 'inline-block' }}>
               <Card
-                bodyStyle={{padding: 16}}
+                bodyStyle={{ padding: 16 }}
                 className={[
                   styles.product_card,
                   cartItem ? styles['product_card--selected'] : '',
                 ].join(' ')}
                 onClick={() => this.onAddProductToCartHandler(product)}
                 hoverable
-                style={{ width: 195, margin: 8, borderRadius: 8, minHeight: 211 }}
+                style={{
+                  width: 195,
+                  margin: 8,
+                  borderRadius: 8,
+                  minHeight: 211,
+                }}
                 cover={
                   <div
                     style={{
@@ -172,7 +177,11 @@ export default class RootHomePage extends React.Component<{}, IState> {
                       count={cartItem ? cartItem.quantity : 0}
                     />
                     <img
-                      style={{ maxHeight: 110, borderRadius: 8, maxWidth:'95%' }}
+                      style={{
+                        maxHeight: 110,
+                        borderRadius: 8,
+                        maxWidth: '95%',
+                      }}
                       alt="example"
                       src={product.image}
                     />

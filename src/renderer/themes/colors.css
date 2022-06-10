@@ -2,6 +2,10 @@
   color: #333;
 }
 
+.danger-color {
+  color: #ff4d4e;
+}
+
 .bg-primary {
   background-color: #fff;
 }
