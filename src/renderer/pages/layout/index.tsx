@@ -95,6 +95,7 @@ export default class LayoutPage extends React.Component<{}, IState> {
 
                   return (
                     <Popover
+                      key={route.label}
                       placement="right"
                       content={localize(route.label)}
                       trigger="hover"

@@ -4,15 +4,15 @@ import ChariotConsole from '../lib/ChariotConsole';
 import WithBootedClient from '../lib/WithBootedClient';
 import ConfigLoaderJob from '../jobs/ConfigLoaderJob';
 
-const chariot = ChariotConsole({ label: 'products-client' });
+const chariot = ChariotConsole({ label: 'slots-client' });
 
-export class ProductsClient implements WithBootedClient {
+export class SlotsClient implements WithBootedClient {
   async boot() {}
 
-  async getAll(): Promise<Array<IProduct>> {
+  async getAll(): Promise<Array<ISlot>> {
     try {
-      const csvPath = ConfigLoaderJob.getProductsFilePath();
-      const results: IProduct[] = [];
+      const csvPath = ConfigLoaderJob.getSlotsPath();
+      const results: ISlot[] = [];
 
       await new Promise((resolve, reject) => {
         fs.createReadStream(csvPath)
@@ -23,9 +23,8 @@ export class ProductsClient implements WithBootedClient {
       });
 
       // Resolve Url or Src
-      results.forEach((product: IProduct) => {
-        product.price = parseInt(`${product.price}`);
-        product.image = ConfigLoaderJob.resolveUrl(product.image);
+      results.forEach((slot: ISlot) => {
+        slot.image = ConfigLoaderJob.resolveUrl(slot.image);
       });
 
       return results;
@@ -36,15 +35,10 @@ export class ProductsClient implements WithBootedClient {
   }
 }
 
-export interface IProduct {
+export interface ISlot {
   id: string;
   name: string;
-  price: number;
   image: string;
 }
 
-export interface IProductCart extends IProduct {
-  quantity: number;
-}
-
-export default new ProductsClient();
+export default new SlotsClient();

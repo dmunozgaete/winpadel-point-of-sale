@@ -25,6 +25,7 @@ import ProductsClient, {
 } from 'renderer/clients/ProductsClient';
 import NumberFormatter from 'renderer/lib/formatters/NumberFormatter';
 import OrdersClient from 'renderer/clients/OrdersClient';
+import SlotsClient, { ISlot } from 'renderer/clients/SlotsClient';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
@@ -33,6 +34,7 @@ const localize = i18n(locales);
 interface IState {
   view_mode: 'LOADING' | 'PRODUCTS_LIST';
   products?: IProduct[];
+  slots: ISlot[];
   cart: Record<string, IProductCart>;
 }
 
@@ -40,6 +42,7 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
   state: IState = {
     view_mode: 'LOADING',
     products: undefined,
+    slots: [],
     cart: {},
   };
 
@@ -48,11 +51,13 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
   }
 
   getProducts = async () => {
-    const products: IProduct[] = await ProductsClient.getProducts();
+    const products: IProduct[] = await ProductsClient.getAll();
+    const slots: ISlot[] = await SlotsClient.getAll();
 
     this.setState({
       view_mode: 'PRODUCTS_LIST',
       products,
+      slots,
     });
   };
 
@@ -95,11 +100,22 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
   };
 
   onCheckoutClickHandler = async (cart: Record<string, IProductCart>) => {
-    await OrdersClient.saveOrder(cart);
+    await OrdersClient.save(cart);
     await this.onCleanCartHandler();
 
     notification.success({
       message: localize('save_notification_message'),
+      description: localize('save_notification_description'),
+      placement: 'bottomLeft',
+    });
+  };
+
+  onPutToSlotClickHandler = async (cart: Record<string, IProductCart>) => {
+    // await OrdersClient.save(cart);
+    await this.onCleanCartHandler();
+
+    notification.success({
+      message: 'Purchase go to slot',
       description: localize('save_notification_description'),
       placement: 'bottomLeft',
     });
@@ -205,7 +221,7 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
   };
 
   render() {
-    const { view_mode, cart } = this.state;
+    const { view_mode, cart, slots } = this.state;
     let totalProducts = 0;
     let totalPrice = 0;
     const user = AuthenticationClient.getInfo();
@@ -379,18 +395,41 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
                 style={{ textAlign: 'center' }}
                 className={styles.layout__sider__footer__actions}
               >
-                <Button
-                  onClick={() => this.onCheckoutClickHandler(cart)}
-                  disabled={totalProducts === 0}
-                  className={styles.layout__sider__footer__actions__button}
-                  type="primary"
-                  danger
-                  shape="round"
-                  icon={<ShoppingOutlined />}
-                  size="large"
-                >
-                  {localize('finish_payment')}
-                </Button>
+                {slots.length === 0 ? (
+                  /* 
+                    If we dont have slot (padel courts for example),
+                    just finish the payment 
+                  */
+                  <Button
+                    onClick={() => this.onCheckoutClickHandler(cart)}
+                    disabled={totalProducts === 0}
+                    className={styles.layout__sider__footer__actions__button}
+                    type="primary"
+                    danger
+                    shape="round"
+                    icon={<ShoppingOutlined />}
+                    size="large"
+                  >
+                    {localize('finish_payment')}
+                  </Button>
+                ) : (
+                  /* 
+                    If we have at least one slot, show a modal
+                    to assign this purchase to a slot
+                  */
+                  <Button
+                    onClick={() => this.onPutToSlotClickHandler(cart)}
+                    disabled={totalProducts === 0}
+                    className={styles.layout__sider__footer__actions__button}
+                    type="primary"
+                    danger
+                    shape="round"
+                    icon={<ShoppingOutlined />}
+                    size="large"
+                  >
+                    {localize('assign_payment')}
+                  </Button>
+                )}
 
                 <Button
                   onClick={() => this.onCleanCartHandler()}

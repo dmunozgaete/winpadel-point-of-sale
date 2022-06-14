@@ -39,7 +39,7 @@ export default class SignInPage extends React.Component<IProps, IState> {
 
   getUsers = async () => {
     try {
-      const users = await UsersClient.getUsers();
+      const users = await UsersClient.getAll();
       this.setState({
         view_mode: 'USERS_LIST',
         users,

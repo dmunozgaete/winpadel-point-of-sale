@@ -1,102 +1,87 @@
-// import csvParser from 'csv-parser';
-import fs from 'fs';
+import PouchDB from 'pouchdb';
+import PouchDBFind from 'pouchdb-find';
 import moment from 'moment';
-import path from 'path';
+import IJwtEntity from 'renderer/models/IJwtEntity';
 import ChariotConsole from '../lib/ChariotConsole';
 import WithBootedClient from '../lib/WithBootedClient';
-import ConfigLoaderJob from '../jobs/ConfigLoaderJob';
 import { IProductCart } from './ProductsClient';
+import AuthenticationClient from './AuthenticationClient';
 
 const chariot = ChariotConsole({ label: 'orders-client' });
-const ORDER_FILE_TEMPLATE = 'day-orders.csv';
 
-export class OrdersClient implements WithBootedClient {
-  async boot() {}
+// Install find plugin
+PouchDB.plugin(PouchDBFind);
 
-  resolverOrderFilePath(day: moment.Moment): string {
-    const folderPath = ConfigLoaderJob.getOrdersPath();
-    const dayOrdersFolderName = day.format('YYYY-MM-DD');
+interface IConfig {
+  db_template: string;
+}
 
-    return path.join(folderPath, dayOrdersFolderName, ORDER_FILE_TEMPLATE);
+class OrdersClient implements WithBootedClient {
+  private db: PouchDB.Database;
+
+  constructor(config: IConfig) {
+    // process the template (reduce -2 hours to fix the "12:00" issue)
+    const db_name = moment().add(-2, 'h').format(config.db_template);
+
+    this.db = new PouchDB(db_name, {
+      revs_limit: 1,
+    });
+
+    this.db.createIndex({
+      index: { fields: ['_id'] },
+    });
+
+    this.db.createIndex({
+      index: { fields: ['year', 'month', 'day'] },
+    });
+
+    this.db.createIndex({
+      index: { fields: ['year', 'month'] },
+    });
   }
 
-  async saveOrder(cart: Record<string, IProductCart>): Promise<void> {
+  async boot(): Promise<void> {}
+
+  async save(cart: Record<string, IProductCart>): Promise<void> {
     try {
-      const dayOfOrder = moment(new Date()).add(-2, 'h');
-      const timeOfOrder = moment();
-      const orderId = timeOfOrder.format('YYYYMMDD[T]hhmmss');
-      const csvPath = this.resolverOrderFilePath(dayOfOrder);      
-      const folderPath = path.dirname(csvPath);
-      const detailFilePath = path.join(folderPath, `${orderId}.csv`);
-      let hasResumeHeaders = true;
-      let hasDetailHeaders = true;
       let totalProducts = 0;
       let totalPrice = 0;
 
-      // ------------------------------------------------------
-      // Create the folder structure
-      if (!fs.existsSync(folderPath)) {
-        hasResumeHeaders = false;
-        fs.mkdirSync(folderPath, { recursive: true });
-      }
-      // ------------------------------------------------------
-
       // ----------------------------------------------
-      // --[ Save the detailed order into a file
-
-      // Check if we need headers
-      if (!fs.existsSync(detailFilePath)) {
-        hasDetailHeaders = false;
-      }
-
       // Iterate each product in the cart
       Object.keys(cart).forEach((sku: string) => {
         const productCart: IProductCart = cart[sku];
         totalPrice += productCart.quantity * productCart.price;
         totalProducts += productCart.quantity;
-
-        // Add header if needed
-        if (!hasDetailHeaders) {
-          fs.appendFileSync(detailFilePath, `${Object.keys(productCart).join(';')}\n`);
-          hasDetailHeaders = true;
-        }
-
-        // Add Product
-        const productInCsvFormat: string[] = [];
-        Object.keys(productCart).forEach((key) => {
-          productInCsvFormat.push((productCart as any)[key]);
-        });
-
-        // Save the detailed file
-        fs.appendFileSync(detailFilePath, `${productInCsvFormat.join(';')}\n`);
       });
       // ----------------------------------------------
 
+      const user = AuthenticationClient.getInfo();
+      const now = moment();
       const order: IOrder = {
-        id: orderId,
-        time: timeOfOrder.format('YYYY-MM-DDThh:mm:ss'),
-        total_price: totalPrice,
-        total_products: totalProducts,
-        detail_path: detailFilePath,
+        user,
+        _id: now.format('YYYYMMDDTHHmmss'),
+        year: parseInt(now.format('YYYY')),
+        month: parseInt(now.format('MM')),
+        day: parseInt(now.format('DD')),
+        created_at: new Date().toISOString(),
+        amount: totalPrice,
+        currency: 'CLP',
+        product_quantity: totalProducts,
       };
 
-      // ----------------------------------------------
-      // --[ Save the orders in the global day resume
-
-       // Add header if needed
-      if (!hasResumeHeaders) {
-        fs.appendFileSync(csvPath, `${Object.keys(order).join(';')}\n`);
-        hasResumeHeaders = true;
-      }
-
-      // Add the resume 
-      const resumeInCsvFormat: string[] = [];
-      Object.keys(order).forEach((key) => {
-        resumeInCsvFormat.push((order as any)[key]);
+      await this.db.put({
+        ...order,
+        _attachments: {
+          'cart.json': {
+            content_type: 'application/json',
+            data: new Blob([JSON.stringify(cart)], {
+              type: 'application/json',
+            }),
+          },
+        },
       });
 
-      // Save the resume file
-      fs.appendFileSync(csvPath, `${resumeInCsvFormat.join(';')}\n`);
       // ----------------------------------------------
     } catch (ex) {
       chariot.error(ex as any);
@@ -106,11 +91,17 @@ export class OrdersClient implements WithBootedClient {
 }
 
 export interface IOrder {
-  time: string;
-  id: string;
-  total_price: number;
-  total_products: number;
-  detail_path: string;
+  _id: string;
+  user: IJwtEntity;
+  created_at: string;
+  year: number;
+  month: number;
+  day: number;
+  amount: number;
+  currency: string;
+  product_quantity: number;
 }
 
-export default new OrdersClient();
+export default new OrdersClient({
+  db_template: '[orders-]YYYYMM',
+});

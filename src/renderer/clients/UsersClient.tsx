@@ -9,7 +9,7 @@ const chariot = ChariotConsole({ label: 'users-client' });
 export class UsersClient implements WithBootedClient {
   async boot() {}
 
-  async getUsers(): Promise<Array<IUser>> {
+  async getAll(): Promise<Array<IUser>> {
     try {
       const csvPath = ConfigLoaderJob.getUsersFilePath();
       const results: IUser[] = [];

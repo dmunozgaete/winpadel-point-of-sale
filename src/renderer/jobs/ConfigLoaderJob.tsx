@@ -7,9 +7,9 @@ import Job from '../lib/Job';
 const CONFIGURATION_FOLDER = 'winpadel';
 const DATABASE_FOLDER = 'db';
 const ASSETS_FOLDER = 'assets';
-const ORDERS_FOLDER = 'orders';
 const USERS_FILENAME = 'users.csv';
 const PRODUCTS_FILENAME = 'products.csv';
+const SLOTS_FILENAME = 'slots.csv';
 
 const chariot = ChariotConsole({ label: 'config-job' });
 interface IConfiguration {
@@ -17,8 +17,8 @@ interface IConfiguration {
   database_path: string;
   assets_path: string;
   users_path: string;
+  slots_path: string;
   products_path: string;
-  orders_path: string;
   is_debug: boolean;
 }
 
@@ -29,7 +29,7 @@ export class ConfigLoaderJob extends Job {
     assets_path: '',
     users_path: '',
     products_path: '',
-    orders_path: '',
+    slots_path: '',
     is_debug: process.env.NODE_ENV === 'development',
   };
 
@@ -72,11 +72,11 @@ export class ConfigLoaderJob extends Job {
   }
 
   /**
-   * Get Orders database path
+   * Get Slots database path
    * @returns string
    */
-  getOrdersPath() {
-    return this.appConfig.orders_path;
+  getSlotsPath() {
+    return this.appConfig.slots_path;
   }
 
   /**
@@ -87,14 +87,16 @@ export class ConfigLoaderJob extends Job {
   resolveUrl(src: string) {
     let resolvedUrl = src;
     if (src.startsWith('assets')) {
-      resolvedUrl = path.join('file://', this.getDatabasePath(), src);
+      resolvedUrl = path.join(this.getDatabasePath(), src);
       const exists = fs.existsSync(resolvedUrl);
       if (!exists) {
-        console.log('dont exists');
+        console.log('dont exists', resolvedUrl);
       }
+
+      return `file://${resolvedUrl}`;
     }
 
-    console.log('url:', src, 'resolved to:', resolvedUrl);
+    // console.log('url:', src, 'resolved to:', resolvedUrl);
     return resolvedUrl;
   }
 
@@ -137,9 +139,9 @@ export class ConfigLoaderJob extends Job {
       PRODUCTS_FILENAME
     );
 
-    this.appConfig.orders_path = path.join(
+    this.appConfig.slots_path = path.join(
       this.appConfig.database_path,
-      ORDERS_FOLDER
+      SLOTS_FILENAME
     );
 
     chariot.log('application config:', this.appConfig);
