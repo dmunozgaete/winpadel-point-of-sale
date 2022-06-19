@@ -1,5 +1,4 @@
 import OrdersClient from 'renderer/clients/OrdersClient';
-import PendingsClient from 'renderer/clients/PendingsClient';
 import ChariotConsole from '../lib/ChariotConsole';
 import Job from '../lib/Job';
 
@@ -32,19 +31,11 @@ export class DatabaseDoctorJob extends Job {
     // (create new databases when a new month appears)
 
     const dbOrdersName = OrdersClient.getDatabaseTemplate();
-    const dbPendingsName = PendingsClient.getDatabaseTemplate();
 
     if (!(await this.isDatabaseCreated(dbOrdersName))) {
       await OrdersClient.boot();
       chariot.warn(
         'order database was recreated to new one (template changed)'
-      );
-    }
-
-    if (!(await this.isDatabaseCreated(dbPendingsName))) {
-      await PendingsClient.boot();
-      chariot.warn(
-        'pending database was recreated to new one (template changed)'
       );
     }
 

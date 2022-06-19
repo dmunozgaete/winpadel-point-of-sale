@@ -16,7 +16,7 @@ interface IConfig {
   db_template: string;
 }
 
-class OrdersClient implements WithBootedClient {
+export class OrdersClient implements WithBootedClient {
   private db: PouchDB.Database | undefined;
 
   private db_template: string;
@@ -39,11 +39,15 @@ class OrdersClient implements WithBootedClient {
     });
 
     this.db.createIndex({
-      index: { fields: ['year', 'month', 'day'] },
+      index: { fields: ['status'] },
     });
 
     this.db.createIndex({
-      index: { fields: ['year', 'month'] },
+      index: { fields: ['day'] },
+    });
+
+    this.db.createIndex({
+      index: { fields: ['day', 'status'] },
     });
   }
 
@@ -52,14 +56,19 @@ class OrdersClient implements WithBootedClient {
    * @returns Return the database template
    */
   getDatabaseTemplate() {
-    return moment().add(-2, 'h').format(this.db_template);
+    const now = moment();
+    return now.add(-1, 'h').format(this.db_template);
   }
 
   /**
    * Save the order in the database
    * @param cart Cart to save
    */
-  async save(cart: Record<string, IProductCart>): Promise<void> {
+  async save(
+    cart: Record<string, IProductCart>,
+    alias: string,
+    pending: boolean
+  ): Promise<void> {
     try {
       let totalProducts = 0;
       let totalPrice = 0;
@@ -85,6 +94,8 @@ class OrdersClient implements WithBootedClient {
         amount: totalPrice,
         currency: 'CLP',
         product_quantity: totalProducts,
+        status: pending ? 'PENDING' : 'PAID',
+        alias,
       };
 
       await this.db!.put({
@@ -117,6 +128,8 @@ export interface IOrder {
   amount: number;
   currency: string;
   product_quantity: number;
+  status: 'PENDING' | 'PAID';
+  alias: string;
 }
 
 export default new OrdersClient({

@@ -27,11 +27,10 @@ import ProductsClient, {
 } from 'renderer/clients/ProductsClient';
 import NumberFormatter from 'renderer/lib/formatters/NumberFormatter';
 import OrdersClient from 'renderer/clients/OrdersClient';
-import PendingsClient from 'renderer/clients/PendingsClient';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
-import PutTheNameModal from './components/put-the-name-modal';
+import PutTheNameModal, { IAlias } from './components/put-the-name-modal';
 
 const localize = i18n(locales);
 interface IState {
@@ -102,11 +101,39 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
     });
   };
 
-  onCheckoutClickHandler = async (cart: Record<string, IProductCart>) => {
-    await OrdersClient.save(cart);
+  saveOrderToDb = async (alias: string, pending: boolean) => {
+    const { cart } = this.state;
+    await OrdersClient.save(cart, alias, pending);
     await this.onCleanCartHandler();
+  };
 
+  onCheckoutClickHandler = async () => {
+    const { pending } = this.state;
+
+    if (pending) {
+      this.setState({
+        show_slots_modal: true,
+      });
+      return;
+    }
+
+    await this.saveOrderToDb('NO_ALIAS', false);
     notification.success({
+      message: localize('save_notification_message'),
+      description: localize('save_notification_description'),
+      placement: 'bottomLeft',
+    });
+  };
+
+  onPutTheNameModalClosedHandler = async (alias: IAlias) => {
+    await this.saveOrderToDb(alias.name, true);
+
+    this.setState({
+      show_slots_modal: false,
+      pending: false,
+    });
+
+    notification.warn({
       message: localize('save_notification_message'),
       description: localize('save_notification_description'),
       placement: 'bottomLeft',
@@ -359,7 +386,7 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
             className={styles.layout__sider__footer__actions}
           >
             <Button
-              onClick={() => this.onCheckoutClickHandler(cart)}
+              onClick={() => this.onCheckoutClickHandler()}
               disabled={totalProducts === 0}
               className={styles.layout__sider__footer__actions__button}
               type="primary"
@@ -385,7 +412,9 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
           </div>
         </Layout.Footer>
 
-        {show_slots_modal ? <PutTheNameModal /> : null}
+        {show_slots_modal ? (
+          <PutTheNameModal onCompleted={this.onPutTheNameModalClosedHandler} />
+        ) : null}
       </>
     );
   };
