@@ -42,23 +42,21 @@ export default class LayoutPage extends React.Component<{}, IState> {
         selected: true,
       },
       {
-        icon: <PieChartOutlined />,
-        route: '/analytics',
-        label: 'analytics',
-        selected: false,
-      },
-      {
         icon: <ClockCircleOutlined />,
         route: '/pendings',
         label: 'pendings',
         selected: false,
       },
+      {
+        icon: <PieChartOutlined />,
+        route: '/analytics',
+        label: 'analytics',
+        selected: false,
+      },
     ],
   };
 
-  componentDidMount() {
-  }
-
+  componentDidMount() {}
 
   onNavigateToHandler = async (selectedRoute: IRoute) => {
     const { routes } = this.state;

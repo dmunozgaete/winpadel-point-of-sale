@@ -57,7 +57,7 @@ export class OrdersClient implements WithBootedClient {
    */
   getDatabaseTemplate() {
     const now = moment();
-    return now.add(-1, 'h').format(this.db_template);
+    return now.add(-2, 'h').format(this.db_template);
   }
 
   /**
@@ -83,7 +83,7 @@ export class OrdersClient implements WithBootedClient {
       // ----------------------------------------------
 
       const user = AuthenticationClient.getInfo();
-      const now = moment();
+      const now = moment().add(-2, 'h');
       const order: IOrder = {
         user,
         _id: now.format('YYYYMMDDTHHmmss'),
