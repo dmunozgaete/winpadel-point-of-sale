@@ -103,7 +103,7 @@
 
 .layout__sider__content {
   composes: bg-primary from "renderer/themes/colors.css";
-  height: calc(100% - 96px - 200px);
+  height: calc(100% - 96px - 220px);
   overflow: scroll;
   padding: 0px 0px 16px 0px;
 }
@@ -117,9 +117,26 @@
 .layout__sider__footer__resume {
   composes: bg-secondary from "renderer/themes/colors.css";
   width: 100%;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   border-radius: 10px;
   padding: 6px 0px;
+}
+
+.layout__sider__footer_pendings {
+  composes: unselecteable;
+  display: flex;
+  margin-bottom: 12px;
+  padding-left: 4px;
+  cursor: pointer;
+}
+
+.layout__sider__footer_pendings > div:first-child {
+  padding-right: 12px;
+}
+
+.layout__sider__footer_pendings > div:last-child {
+  font-weight: 300;
+  font-size: 1.05em;
 }
 
 .layout__sider__footer__resume__row {
@@ -229,4 +246,15 @@
   line-height: 1.3em;
   width: 44px;
   text-align: center;
+}
+
+.slots_modal {
+  width: 1080px !important;
+  min-height: 60%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.slot_modal_item {
+  margin-right: 16px;
 }

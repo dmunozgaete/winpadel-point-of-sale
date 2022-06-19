@@ -1,13 +1,13 @@
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 import moment from 'moment';
-import IJwtEntity from 'renderer/models/IJwtEntity';
 import ChariotConsole from '../lib/ChariotConsole';
 import WithBootedClient from '../lib/WithBootedClient';
 import { IProductCart } from './ProductsClient';
 import AuthenticationClient from './AuthenticationClient';
+import { IOrder } from './OrdersClient';
 
-const chariot = ChariotConsole({ label: 'orders-client' });
+const chariot = ChariotConsole({ label: 'pendings-client' });
 
 // Install find plugin
 PouchDB.plugin(PouchDBFind);
@@ -16,7 +16,7 @@ interface IConfig {
   db_template: string;
 }
 
-class OrdersClient implements WithBootedClient {
+export class PendingsClient implements WithBootedClient {
   private db: PouchDB.Database | undefined;
 
   private db_template: string;
@@ -56,11 +56,13 @@ class OrdersClient implements WithBootedClient {
   }
 
   /**
-   * Save the order in the database
+   * Save the pending order in the database
    * @param cart Cart to save
    */
   async save(cart: Record<string, IProductCart>): Promise<void> {
     try {
+      await this.boot();
+
       let totalProducts = 0;
       let totalPrice = 0;
 
@@ -75,7 +77,7 @@ class OrdersClient implements WithBootedClient {
 
       const user = AuthenticationClient.getInfo();
       const now = moment();
-      const order: IOrder = {
+      const order: IPendingOrder = {
         user,
         _id: now.format('YYYYMMDDTHHmmss'),
         year: parseInt(now.format('YYYY')),
@@ -85,6 +87,7 @@ class OrdersClient implements WithBootedClient {
         amount: totalPrice,
         currency: 'CLP',
         product_quantity: totalProducts,
+        alias: 'DUMMY',
       };
 
       await this.db!.put({
@@ -107,18 +110,10 @@ class OrdersClient implements WithBootedClient {
   }
 }
 
-export interface IOrder {
-  _id: string;
-  user: IJwtEntity;
-  created_at: string;
-  year: number;
-  month: number;
-  day: number;
-  amount: number;
-  currency: string;
-  product_quantity: number;
+export interface IPendingOrder extends IOrder {
+  alias: string;
 }
 
-export default new OrdersClient({
-  db_template: '[orders-]YYYYMM',
+export default new PendingsClient({
+  db_template: '[pendings-]YYYYMM',
 });

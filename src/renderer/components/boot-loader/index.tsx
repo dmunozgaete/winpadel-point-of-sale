@@ -1,8 +1,13 @@
 import React from 'react';
-import SettingsClient from '../../clients/SettingsClient';
-import JobList from '../../jobs';
-import Job from '../../lib/Job';
+import ClientList from 'renderer/clients/index';
+import OrdersClient from 'renderer/clients/OrdersClient';
+import PendingsClient from 'renderer/clients/PendingsClient';
+import ProductsClient from 'renderer/clients/ProductsClient';
+import UsersClient from 'renderer/clients/UsersClient';
+import WithBootedClient from 'renderer/lib/WithBootedClient';
 import { setLocale } from '../../lib/i18n';
+import Job from '../../lib/Job';
+import JobList from '../../jobs';
 
 interface IProps {
   onLoadComplete: (status: {}) => void;
@@ -31,14 +36,23 @@ export default class BootLoader extends React.Component<IProps, IState> {
     // And copy into another database ^^, then destroy the old one, and
     // replace with the new one without the "deleted documents"
     // - https://github.com/pouchdb/pouchdb/issues/7598
+    const promisesToWait: Promise<void>[] = [];
 
     // Set the language
-    const language = SettingsClient.get('LANGUAGE', 'es');
+    ClientList.SettingsClient.boot();
+    const language = ClientList.SettingsClient.get('LANGUAGE', 'es');
     console.log('language', language);
     setLocale(language);
 
+    // Client's Boot
+    Object.keys(ClientList).forEach((key: string) => {
+      const client: WithBootedClient = (
+        ClientList as Record<string, WithBootedClient>
+      )[key];
+      promisesToWait.push(client.boot());
+    });
+
     // Job's Boot
-    const promisesToWait: Promise<void>[] = [];
     Object.keys(JobList).forEach((key: string) => {
       const job: Job = (JobList as Record<string, Job>)[key];
       promisesToWait.push(job.boot());

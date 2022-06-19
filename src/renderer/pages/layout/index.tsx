@@ -4,6 +4,7 @@ import {
   ShopOutlined,
   LogoutOutlined,
   PieChartOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { HashRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import ConfigLoaderJob from 'renderer/jobs/ConfigLoaderJob';
@@ -46,10 +47,18 @@ export default class LayoutPage extends React.Component<{}, IState> {
         label: 'analytics',
         selected: false,
       },
+      {
+        icon: <ClockCircleOutlined />,
+        route: '/pendings',
+        label: 'pendings',
+        selected: false,
+      },
     ],
   };
 
-  componentDidMount() {}
+  componentDidMount() {
+  }
+
 
   onNavigateToHandler = async (selectedRoute: IRoute) => {
     const { routes } = this.state;

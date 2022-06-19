@@ -13,7 +13,7 @@ enum SETTINGS_ENUM {
 }
 export type SettingTypes = keyof typeof SETTINGS_ENUM;
 
-class SettingsClient extends WithBootedClient {
+export class SettingsClient extends WithBootedClient {
   state: IState = {};
 
   async boot() {

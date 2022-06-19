@@ -8,7 +8,8 @@ const LOCALES = {
   total_products: 'Productos',
   total_amount: 'Total',
   finish_payment: 'Finalizar Compra',
-  assign_payment: 'Asignar Compra',
+  pending_payment: 'Guardar Pendiente',
+  mark_as_pending: 'Marcar pago como pendiente',
   clean_cart: 'Limpiar',
 
   save_notification_message: 'Orden Guardada',

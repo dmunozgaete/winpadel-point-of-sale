@@ -36,10 +36,6 @@ export default class App extends React.Component<{}, PageState> {
   }
 
   startHandler = async () => {
-    // We need this client booted before the main boot loader
-    await SettingsClient.boot();
-    await AuthenticationClient.boot();
-
     this.setState({
       app_booting: false,
       is_first_time: SettingsClient.get('FIRST_TIME', false),

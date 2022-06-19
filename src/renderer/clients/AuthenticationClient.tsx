@@ -20,7 +20,7 @@ interface IState {
   provider: string;
 }
 
-class AuthenticationClient extends WithBootedClient {
+export class AuthenticationClient extends WithBootedClient {
   state: IState = {
     isAuthenticated: false,
     provider: '',
