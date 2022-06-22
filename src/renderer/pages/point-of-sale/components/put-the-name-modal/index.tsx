@@ -60,8 +60,8 @@ export default class PutTheNameModal extends React.Component<IProps, IState> {
     this.setState({
       search_result: [
         { value, label: value },
-        { value: 'light', label: 'Light' },
-        { value: 'bamboo', label: 'Bamboo' },
+        // { value: 'light', label: 'Light' },
+        // { value: 'bamboo', label: 'Bamboo' },
       ],
     });
   };
