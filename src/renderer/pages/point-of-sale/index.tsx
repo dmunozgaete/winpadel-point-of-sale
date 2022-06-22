@@ -30,7 +30,7 @@ import OrdersClient from 'renderer/clients/OrdersClient';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
-import PutTheNameModal, { IAlias } from './components/put-the-name-modal';
+import PutTheNameModal from './components/put-the-name-modal';
 
 const localize = i18n(locales);
 interface IState {
@@ -101,9 +101,9 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
     });
   };
 
-  saveOrderToDb = async (alias: string, pending: boolean) => {
+  saveOrderToDb = async (tags: string, pending: boolean) => {
     const { cart } = this.state;
-    await OrdersClient.save(cart, alias, pending);
+    await OrdersClient.save(cart, tags, pending);
     await this.onCleanCartHandler();
   };
 
@@ -117,7 +117,7 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
       return;
     }
 
-    await this.saveOrderToDb('NO_ALIAS', false);
+    await this.saveOrderToDb('NO_TAGS', false);
     notification.success({
       message: localize('save_notification_message'),
       description: localize('save_notification_description'),
@@ -125,8 +125,14 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
     });
   };
 
-  onPutTheNameModalClosedHandler = async (alias: IAlias) => {
-    await this.saveOrderToDb(alias.name, true);
+  onPutTheNameModalCancelHandler = async () => {
+    this.setState({
+      show_slots_modal: false,
+    });
+  };
+
+  onPutTheNameModalCompletedHandler = async (tag: string) => {
+    await this.saveOrderToDb(tag, true);
 
     this.setState({
       show_slots_modal: false,
@@ -413,7 +419,10 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
         </Layout.Footer>
 
         {show_slots_modal ? (
-          <PutTheNameModal onCompleted={this.onPutTheNameModalClosedHandler} />
+          <PutTheNameModal
+            onCancel={this.onPutTheNameModalCancelHandler}
+            onCompleted={this.onPutTheNameModalCompletedHandler}
+          />
         ) : null}
       </>
     );

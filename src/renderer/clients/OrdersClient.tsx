@@ -66,7 +66,7 @@ export class OrdersClient implements WithBootedClient {
    */
   async save(
     cart: Record<string, IProductCart>,
-    alias: string,
+    tags: string,
     pending: boolean
   ): Promise<void> {
     try {
@@ -95,7 +95,7 @@ export class OrdersClient implements WithBootedClient {
         currency: 'CLP',
         product_quantity: totalProducts,
         status: pending ? 'PENDING' : 'PAID',
-        alias,
+        tags,
       };
 
       await this.db!.put({
@@ -129,7 +129,7 @@ export interface IOrder {
   currency: string;
   product_quantity: number;
   status: 'PENDING' | 'PAID';
-  alias: string;
+  tags: string;
 }
 
 export default new OrdersClient({
