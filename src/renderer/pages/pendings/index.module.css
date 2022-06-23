@@ -1,0 +1,48 @@
+.header_base {
+  height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.layout {
+  height: 100%;
+  composes: bg-secondary from "renderer/themes/colors.css";
+}
+
+.layout__header {
+  composes: bg-secondary from "renderer/themes/colors.css";
+  composes: header_base;
+}
+
+.layout__header__title {
+  composes: text-color from "renderer/themes/colors.css";
+  font-size: 2.4em;
+  font-weight: normal;
+}
+
+.layout__header__subtitle {
+  composes: text-color from "renderer/themes/colors.css";
+  font-size: 1em;
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.layout__content {
+  composes: bg-secondary from "renderer/themes/colors.css";
+  overflow: scroll;
+  padding: 0px 48px;
+}
+
+.layout__sider {
+  composes: bg-secondary from "renderer/themes/colors.css";
+  padding: 142px 40px 10px 0px;
+}
+
+.layout__sider__card {
+  margin: 0px 0px 16px 0px;
+}
+
+.layout_table_row {
+  cursor: pointer;
+}

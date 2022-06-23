@@ -27,6 +27,7 @@ import ProductsClient, {
 } from 'renderer/clients/ProductsClient';
 import NumberFormatter from 'renderer/lib/formatters/NumberFormatter';
 import OrdersClient from 'renderer/clients/OrdersClient';
+import EventStreamer from 'renderer/lib/EventStreamer';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
@@ -105,6 +106,11 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
     const { cart } = this.state;
     await OrdersClient.save(cart, tags, pending);
     await this.onCleanCartHandler();
+
+    if (pending) {
+      EventStreamer.emit('PENDINGS:ADDED', cart);
+      EventStreamer.emit('PENDINGS:CHANGED', cart);
+    }
   };
 
   onCheckoutClickHandler = async () => {
@@ -220,7 +226,7 @@ export default class PointOfSalePage extends React.Component<{}, IState> {
                   >
                     <Badge
                       size="default"
-                      title="asd"
+                      title="counter"
                       className={styles.product_card__meta___badge}
                       count={cartItem ? cartItem.quantity : 0}
                     />

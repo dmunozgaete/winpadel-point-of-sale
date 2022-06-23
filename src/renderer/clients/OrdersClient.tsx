@@ -2,6 +2,8 @@ import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 import moment from 'moment';
 import IJwtEntity from 'renderer/models/IJwtEntity';
+import IPouchDbResponse from 'renderer/lib/IPouchDbResponse';
+import EventStreamer from 'renderer/lib/EventStreamer';
 import ChariotConsole from '../lib/ChariotConsole';
 import WithBootedClient from '../lib/WithBootedClient';
 import { IProductCart } from './ProductsClient';
@@ -17,7 +19,7 @@ interface IConfig {
 }
 
 export class OrdersClient implements WithBootedClient {
-  private db: PouchDB.Database | undefined;
+  private db: PouchDB.Database<IOrder> | undefined;
 
   private db_template: string;
 
@@ -58,6 +60,52 @@ export class OrdersClient implements WithBootedClient {
   getDatabaseTemplate() {
     const now = moment();
     return now.add(-2, 'h').format(this.db_template);
+  }
+
+  /**
+   * Get Pendings Orders
+   * @param offset offset index
+   * @param limit records limit
+   */
+  async getPendings(
+    offset: number,
+    limit: number
+  ): Promise<IPouchDbResponse<IOrder>> {
+    const results = await this.db!.find({
+      skip: offset,
+      limit,
+      selector: { status: 'PENDING' },
+      // fields: ['_id', 'name'],
+      // sort: ['status'],
+    });
+
+    return {
+      data: results.docs,
+      limit,
+      offset,
+      total: results.docs.length,
+    };
+  }
+
+  /**
+   * Get Pendings Count
+   * @param status Pending Status
+   */
+  async getCount(status: 'PENDING' | 'PAID'): Promise<number> {
+    const results = await this.db!.find({
+      fields: ['_id'],
+      selector: { status },
+    });
+
+    return results.docs.length;
+  }
+
+  async updateToPaid(id: string): Promise<void> {
+    const recordToUpdate = await this.db!.get(id);
+    recordToUpdate.status = 'PAID';
+    await this.db!.put(recordToUpdate);
+
+    EventStreamer.emit('PENDINGS:CHANGED', recordToUpdate);
   }
 
   /**

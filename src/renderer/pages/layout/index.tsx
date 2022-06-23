@@ -1,5 +1,5 @@
 import React from 'react';
-import { Popover, Layout } from 'antd';
+import { Popover, Layout, Badge } from 'antd';
 import {
   ShopOutlined,
   LogoutOutlined,
@@ -15,6 +15,10 @@ import AnalyticsPage from 'renderer/pages/analytics';
 
 import i18n from 'renderer/lib/i18n';
 import AuthenticationClient from 'renderer/clients/AuthenticationClient';
+import OrdersClient from 'renderer/clients/OrdersClient';
+import EventStreamer from 'renderer/lib/EventStreamer';
+import PendingsPage from '../pendings';
+
 import styles from './index.module.css';
 
 import locales from './locales';
@@ -26,37 +30,61 @@ interface IRoute {
   route: string;
   label: string;
   selected: boolean;
+  counter: () => number;
 }
 
 interface IState {
   routes: IRoute[];
+  pending_counter: number;
 }
 
 export default class LayoutPage extends React.Component<{}, IState> {
   state: IState = {
+    pending_counter: 0,
     routes: [
       {
         icon: <ShopOutlined />,
         route: '',
         label: 'checkout',
         selected: true,
+        counter: () => 0,
       },
       {
         icon: <ClockCircleOutlined />,
         route: '/pendings',
         label: 'pendings',
         selected: false,
+        counter: () => {
+          const { pending_counter } = this.state;
+          return pending_counter;
+        },
       },
       {
         icon: <PieChartOutlined />,
         route: '/analytics',
         label: 'analytics',
         selected: false,
+        counter: () => 0,
       },
     ],
   };
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.getPendingsCount();
+
+    EventStreamer.on('PENDINGS:CHANGED', this.getPendingsCount);
+  }
+
+  componentWillUnmount() {
+    EventStreamer.off('PENDINGS:CHANGED', this.getPendingsCount);
+  }
+
+  getPendingsCount = async () => {
+    const pendings = await OrdersClient.getCount('PENDING');
+    this.setState({
+      pending_counter: pendings,
+    });
+  };
 
   onNavigateToHandler = async (selectedRoute: IRoute) => {
     const { routes } = this.state;
@@ -112,7 +140,15 @@ export default class LayoutPage extends React.Component<{}, IState> {
                         to={route.route}
                         className={classesToAdd.join(' ')}
                       >
-                        {route.icon}
+                        <div style={{ position: 'relative' }}>
+                          {route.icon}
+                          <Badge
+                            count={route.counter()}
+                            title="pendings"
+                            size="default"
+                            className={styles.layout__sider__buttons__badge}
+                          />
+                        </div>
                       </NavLink>
                     </Popover>
                   );
@@ -136,6 +172,7 @@ export default class LayoutPage extends React.Component<{}, IState> {
                   <Route path="test/:id" element={<div>test</div>} />
                 </Route>
                 <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/pendings" element={<PendingsPage />} />
               </Routes>
               {/*  <Switch>
                     <Route path="/" component={RootHomePage} exact />

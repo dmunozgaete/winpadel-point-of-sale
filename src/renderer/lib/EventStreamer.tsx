@@ -6,6 +6,9 @@ enum EVENTS_ENUM {
   'SETTINGS_REMOVED',
   'NAVIGATE_TO',
   'DEEPLINK:SSO_CALLBACK',
+  'PENDINGS:CHANGED',
+  'PENDINGS:ADDED',
+  'PENDINGS:REMOVED',
 }
 export type EventStreamerTypes = keyof typeof EVENTS_ENUM;
 
