@@ -1,24 +1,54 @@
 import React from 'react';
-import { Layout, Row, Col, Card, Statistic, Space } from 'antd';
+import { Layout, Row, Col, Card, Statistic, List } from 'antd';
 import { DollarOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { Line } from '@ant-design/plots';
 
 import NumberFormatter from 'renderer/lib/formatters/NumberFormatter';
+import OrdersClient, { IOrder } from 'renderer/clients/OrdersClient';
+import IPouchDbResponse from 'renderer/lib/IPouchDbResponse';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
 
 const localize = i18n(locales);
-interface IState {}
+interface IState {
+  view_mode: 'LOADING' | 'GRAPH_READY';
+  orders: IPouchDbResponse<IOrder> | undefined;
+  total_orders: number;
+  total_amount: number;
+}
 
 export default class AnalyticsPage extends React.Component<{}, IState> {
-  state: IState = {};
+  state: IState = {
+    view_mode: 'LOADING',
+    orders: undefined,
+    total_orders: 0,
+    total_amount: 0,
+  };
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.getGraphData();
+  }
 
-  render() {
+  getGraphData = async () => {
+    let { total_amount } = this.state;
+    const orders = await OrdersClient.getAll(0, 100);
+    orders.data.forEach((order: IOrder) => {
+      total_amount += order.amount;
+    });
+    this.setState({
+      view_mode: 'GRAPH_READY',
+      orders,
+      total_orders: orders.total,
+      total_amount,
+    });
+  };
+
+  render_GRAPH_READY = () => {
+    const { total_amount, total_orders, orders } = this.state;
+
     return (
-      <Layout className={styles.layout}>
+      <>
         <Layout>
           <Layout.Header className={styles.layout__header}>
             <div style={{ lineHeight: 'normal', minHeight: 0 }}>
@@ -38,7 +68,7 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
                 <Card>
                   <Statistic
                     title={localize('statistics_day_sales')}
-                    value={32500000}
+                    value={total_amount}
                     precision={0}
                     prefix={<DollarOutlined />}
                     suffix="CLP"
@@ -50,7 +80,7 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
                 <Card>
                   <Statistic
                     title={localize('statistics_cart_sales')}
-                    value={325}
+                    value={total_orders}
                     precision={0}
                     prefix={<ShoppingOutlined />}
                     groupSeparator="."
@@ -198,7 +228,33 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
               </span>
             </div>
           </Layout.Header>
+          <Layout.Content>
+            <List>
+              {orders!.data.map((order: IOrder) => {
+                return <List.Item>{order.amount}</List.Item>;
+              })}
+            </List>
+          </Layout.Content>
         </Layout.Sider>
+      </>
+    );
+  };
+
+  render_LOADING = () => {
+    return <div>Loading...</div>;
+  };
+
+  render() {
+    const { view_mode } = this.state;
+    return (
+      <Layout className={styles.layout}>
+        {(() => {
+          const customRender: Function = (this as any)[`render_${view_mode}`];
+          if (!customRender) {
+            return <div>{view_mode}</div>;
+          }
+          return customRender();
+        })()}
       </Layout>
     );
   }

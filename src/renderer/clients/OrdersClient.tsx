@@ -88,6 +88,31 @@ export class OrdersClient implements WithBootedClient {
   }
 
   /**
+   * Get Orders
+   * @param offset offset index
+   * @param limit records limit
+   */
+  async getAll(
+    offset: number,
+    limit: number
+  ): Promise<IPouchDbResponse<IOrder>> {
+    const results = await this.db!.find({
+      skip: offset,
+      limit,
+      selector: { status: 'PAID' },
+      // fields: ['_id', 'name'],
+      // sort: ['status'],
+    });
+
+    return {
+      data: results.docs,
+      limit,
+      offset,
+      total: results.docs.length,
+    };
+  }
+
+  /**
    * Get Pendings Count
    * @param status Pending Status
    */
@@ -98,6 +123,17 @@ export class OrdersClient implements WithBootedClient {
     });
 
     return results.docs.length;
+  }
+
+  async getCart(orderId: string): Promise<Record<string, IProductCart>> {
+    const blob: Blob = (await this.db!.getAttachment(
+      orderId,
+      'cart.json'
+    )) as Blob;
+
+    const text = await blob.text();
+    const cart = JSON.parse(text) as Record<string, IProductCart>;
+    return cart;
   }
 
   async updateToPaid(id: string): Promise<void> {

@@ -9,6 +9,7 @@ import {
   Table,
   Tag,
   Tooltip,
+  notification,
 } from 'antd';
 import {
   EditOutlined,
@@ -29,6 +30,7 @@ import locales from './locales';
 
 const localize = i18n(locales);
 interface IState {
+  view_mode: 'LOADING' | 'PENDINGS_LOADED';
   datasource: IPouchDbResponse<IOrder> | undefined;
   total_amount: number;
   total_pendings: number;
@@ -38,6 +40,7 @@ interface IState {
 
 export default class PendingsPage extends React.Component<{}, IState> {
   state: IState = {
+    view_mode: 'LOADING',
     datasource: undefined,
     total_amount: 0,
     total_pendings: 0,
@@ -54,7 +57,14 @@ export default class PendingsPage extends React.Component<{}, IState> {
     EventStreamer.off('PENDINGS:CHANGED', this.onPendingsChangedEventHandler);
   }
 
-  onPendingsChangedEventHandler = async () => {
+  onPendingsChangedEventHandler = async (updatedOrder: IOrder) => {
+    console.log(updatedOrder);
+    notification.success({
+      message: localize('update_notification_message'),
+      description: localize('update_notification_description'),
+      placement: 'bottomLeft',
+    });
+
     this.getPendingsOrders();
   };
 
@@ -82,15 +92,26 @@ export default class PendingsPage extends React.Component<{}, IState> {
       total_amount += order.amount;
     });
     this.setState({
+      view_mode: 'PENDINGS_LOADED',
       datasource: results,
       total_pendings,
       total_amount,
     });
   }
 
-  render() {
-    const { datasource, total_amount, total_pendings } = this.state;
-    const { show_order_detail, order_detail_data } = this.state;
+  render_LOADING = () => {
+    return <div>Loading...</div>;
+  };
+
+  render_PENDINGS_LOADED = () => {
+    const {
+      datasource,
+      total_amount,
+      total_pendings,
+      show_order_detail,
+      order_detail_data,
+    } = this.state;
+
     const columns = [
       {
         width: 80,
@@ -190,7 +211,7 @@ export default class PendingsPage extends React.Component<{}, IState> {
     ];
 
     return (
-      <Layout className={styles.layout}>
+      <>
         <Layout>
           <Layout.Header className={styles.layout__header}>
             <div style={{ lineHeight: 'normal', minHeight: 0 }}>
@@ -259,6 +280,21 @@ export default class PendingsPage extends React.Component<{}, IState> {
             onClose={this.onCloseDetailModalHandler}
           />
         ) : null}
+      </>
+    );
+  };
+
+  render() {
+    const { view_mode } = this.state;
+    return (
+      <Layout className={styles.layout}>
+        {(() => {
+          const customRender: Function = (this as any)[`render_${view_mode}`];
+          if (!customRender) {
+            return <div>{view_mode}</div>;
+          }
+          return customRender();
+        })()}
       </Layout>
     );
   }
