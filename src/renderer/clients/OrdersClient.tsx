@@ -59,7 +59,7 @@ export class OrdersClient implements WithBootedClient {
    */
   getDatabaseTemplate() {
     const now = moment();
-    return now.add(-2, 'h').format(this.db_template);
+    return now.add(-1, 'h').format(this.db_template);
   }
 
   /**
@@ -88,7 +88,7 @@ export class OrdersClient implements WithBootedClient {
   }
 
   /**
-   * Get Orders
+   * Get all orders from the month
    * @param offset offset index
    * @param limit records limit
    */
@@ -100,6 +100,33 @@ export class OrdersClient implements WithBootedClient {
       skip: offset,
       limit,
       selector: { status: 'PAID' },
+      // fields: ['_id', 'name'],
+      // sort: ['status'],
+    });
+
+    return {
+      data: results.docs,
+      limit,
+      offset,
+      total: results.docs.length,
+    };
+  }
+
+  /**
+   * Get all orders from specific day
+   * @param day day of the month to retrieve
+   * @param offset offset index
+   * @param limit records limit
+   */
+  async getAllByDay(
+    day: number,
+    offset: number,
+    limit: number
+  ): Promise<IPouchDbResponse<IOrder>> {
+    const results = await this.db!.find({
+      skip: offset,
+      limit,
+      selector: { day, status: 'PAID' },
       // fields: ['_id', 'name'],
       // sort: ['status'],
     });
@@ -167,7 +194,7 @@ export class OrdersClient implements WithBootedClient {
       // ----------------------------------------------
 
       const user = AuthenticationClient.getInfo();
-      const now = moment().add(-2, 'h');
+      const now = moment().add(-1, 'h');
       const order: IOrder = {
         user,
         _id: now.format('YYYYMMDDTHHmmss'),

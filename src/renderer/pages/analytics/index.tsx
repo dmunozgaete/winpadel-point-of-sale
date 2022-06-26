@@ -1,66 +1,184 @@
 import React from 'react';
-import { Layout, Row, Col, Card, Statistic, List } from 'antd';
+import {
+  Layout,
+  Row,
+  Col,
+  Card,
+  Statistic,
+  List,
+  Segmented,
+  Skeleton,
+} from 'antd';
 import { DollarOutlined, ShoppingOutlined } from '@ant-design/icons';
-import { Line } from '@ant-design/plots';
+import { Column } from '@ant-design/plots';
 
 import NumberFormatter from 'renderer/lib/formatters/NumberFormatter';
 import OrdersClient, { IOrder } from 'renderer/clients/OrdersClient';
 import IPouchDbResponse from 'renderer/lib/IPouchDbResponse';
+import { SegmentedValue } from 'antd/lib/segmented';
+import moment from 'moment';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
 
 const localize = i18n(locales);
 interface IState {
-  view_mode: 'LOADING' | 'GRAPH_READY';
+  view_mode: 'LOADING' | 'GRAPH_TODAY' | 'GRAPH_WEEK' | 'GRAPH_MONTH';
   orders: IPouchDbResponse<IOrder> | undefined;
-  total_orders: number;
-  total_amount: number;
+  statistics: {
+    amount: number;
+    total: number;
+    acumulated: number;
+  };
+  graph_data: IGraphData[] | undefined;
+}
+
+interface IGraphData {
+  xAxis: string;
+  value: number;
+  acumulated: number;
 }
 
 export default class AnalyticsPage extends React.Component<{}, IState> {
   state: IState = {
     view_mode: 'LOADING',
     orders: undefined,
-    total_orders: 0,
-    total_amount: 0,
+    statistics: {
+      amount: 0,
+      total: 0,
+      acumulated: 0,
+    },
+    graph_data: undefined,
   };
 
   componentDidMount() {
-    this.getGraphData();
+    setTimeout(() => {
+      this.getGraphDataForToday();
+    }, 250);
   }
 
-  getGraphData = async () => {
-    let { total_amount } = this.state;
-    const orders = await OrdersClient.getAll(0, 100);
+  getGraphDataForToday = async () => {
+    const { statistics } = this.state;
+    const today = moment().add(-1, 'h').date();
+    const orders = await OrdersClient.getAllByDay(today, 0, 100);
+
+    const ordersByHour: Record<string, IGraphData> = {};
+    for (let hour = 1; hour <= 24; hour += 1) {
+      const formatterHour = `${hour.toString().padStart(2, '0')}:00`;
+      ordersByHour[hour] = {
+        xAxis: formatterHour,
+        value: 0,
+        acumulated: 0,
+      };
+    }
+
     orders.data.forEach((order: IOrder) => {
-      total_amount += order.amount;
+      // Order the list by hour
+      let hour = moment(order.created_at).hour();
+      if (hour === 0) hour = 24;
+      if (!ordersByHour[hour]) {
+        console.error(`hour ${hour} is not in the array`);
+        return;
+      }
+
+      const item = ordersByHour[hour];
+      item.value += order.amount;
     });
+
+    const graph_data: IGraphData[] = [];
+    Object.keys(ordersByHour).forEach((key) => {
+      const item = ordersByHour[key];
+
+      statistics.amount += item.value;
+      item.acumulated = statistics.amount;
+
+      graph_data.push(item);
+    });
+
+    // Get the last hour for accumulated
+    let currentHour = moment().hour();
+    if (currentHour === 0) currentHour = 24;
+
+    statistics.acumulated = ordersByHour[currentHour].value;
+    statistics.total = orders.total;
+
     this.setState({
-      view_mode: 'GRAPH_READY',
+      view_mode: 'GRAPH_TODAY',
       orders,
-      total_orders: orders.total,
-      total_amount,
+      graph_data,
+      statistics,
     });
   };
 
-  render_GRAPH_READY = () => {
-    const { total_amount, total_orders, orders } = this.state;
+  getGraphDataForWeek = async () => {
+    await this.getGraphDataForToday();
+  };
+
+  getGraphDataForMonth = async () => {
+    await this.getGraphDataForToday();
+  };
+
+  onRangeChangedHandler = async (value: SegmentedValue) => {
+    console.log(value);
+    this.setState({
+      view_mode: 'LOADING',
+      statistics: {
+        acumulated: 0,
+        amount: 0,
+        total: 0,
+      },
+      orders: undefined,
+      graph_data: undefined,
+    });
+
+    setTimeout(() => {
+      if (localize('segmented_today') === value) {
+        this.getGraphDataForToday();
+      } else if (localize('segmented_week') === value) {
+        this.getGraphDataForWeek();
+      } else if (localize('segmented_month') === value) {
+        this.getGraphDataForMonth();
+      }
+    }, 500);
+  };
+
+  render_GRAPH_TODAY = () => {
+    const { statistics, orders, graph_data } = this.state;
 
     return (
       <>
         <Layout>
           <Layout.Header className={styles.layout__header}>
-            <div style={{ lineHeight: 'normal', minHeight: 0 }}>
-              <span className={styles.layout__header__title}>
-                {localize('title')}
-              </span>
-            </div>
-            <div style={{ lineHeight: 'normal', minHeight: 0, paddingTop: 4 }}>
-              <span className={styles.layout__header__subtitle}>
-                {localize('subtitle')}
-              </span>
-            </div>
+            <Row align="middle">
+              <Col span={16}>
+                <div style={{ lineHeight: 'normal', minHeight: 0 }}>
+                  <span className={styles.layout__header__title}>
+                    {localize('title')}
+                  </span>
+                </div>
+                <div
+                  style={{ lineHeight: 'normal', minHeight: 0, paddingTop: 4 }}
+                >
+                  <span className={styles.layout__header__subtitle}>
+                    {localize('subtitle')}
+                  </span>
+                </div>
+              </Col>
+              <Col span={8}>
+                <Segmented
+                  className={styles.layout__content__segmented}
+                  size="middle"
+                  value={localize('segmented_today')}
+                  options={[
+                    localize('segmented_today'),
+                    localize('segmented_week'),
+                    localize('segmented_month'),
+                  ]}
+                  onChange={this.onRangeChangedHandler}
+                  block
+                />
+              </Col>
+            </Row>
           </Layout.Header>
           <Layout.Content className={styles.layout__content}>
             <Row gutter={24}>
@@ -68,7 +186,7 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
                 <Card>
                   <Statistic
                     title={localize('statistics_day_sales')}
-                    value={total_amount}
+                    value={statistics.amount}
                     precision={0}
                     prefix={<DollarOutlined />}
                     suffix="CLP"
@@ -76,11 +194,23 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
                   />
                 </Card>
               </Col>
-              <Col span={7}>
+              <Col span={8}>
                 <Card>
                   <Statistic
                     title={localize('statistics_cart_sales')}
-                    value={total_orders}
+                    value={statistics.total}
+                    precision={0}
+                    prefix={<ShoppingOutlined />}
+                    groupSeparator="."
+                    suffix=""
+                  />
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card>
+                  <Statistic
+                    title={localize('statistics_cart_sales')}
+                    value={statistics.acumulated}
                     precision={0}
                     prefix={<ShoppingOutlined />}
                     groupSeparator="."
@@ -93,113 +223,29 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
             <Row>
               <Col span={24}>
                 <Card>
-                  <Line
+                  <Column
                     className={styles.layout__content__chart}
-                    data={[
-                      {
-                        timePeriod: '00:00',
-                        value: 0,
-                      },
-                      {
-                        timePeriod: '01:00',
-                        value: 0,
-                      },
-                      {
-                        timePeriod: '02:00',
-                        value: 0,
-                      },
-                      {
-                        timePeriod: '03:00',
-                        value: 0,
-                      },
-                      {
-                        timePeriod: '04:00',
-                        value: 0,
-                      },
-                      {
-                        timePeriod: '05:00',
-                        value: 0,
-                      },
-                      {
-                        timePeriod: '06:00',
-                        value: 0,
-                      },
-                      {
-                        timePeriod: '07:00',
-                        value: 1500,
-                      },
-                      {
-                        timePeriod: '08:00',
-                        value: 3000,
-                      },
-                      {
-                        timePeriod: '09:00',
-                        value: 7000,
-                      },
-                      {
-                        timePeriod: '10:00',
-                        value: 12000,
-                      },
-                      {
-                        timePeriod: '11:00',
-                        value: 12500,
-                      },
-                      {
-                        timePeriod: '12:00',
-                        value: 14000,
-                      },
-                      {
-                        timePeriod: '13:00',
-                        value: 14000,
-                      },
-                      {
-                        timePeriod: '14:00',
-                        value: 14000,
-                      },
-                      {
-                        timePeriod: '15:00',
-                        value: 15600,
-                      },
-                      {
-                        timePeriod: '16:00',
-                        value: 17000,
-                      },
-                      {
-                        timePeriod: '17:00',
-                        value: 21434,
-                      },
-                      {
-                        timePeriod: '18:00',
-                        value: 27000,
-                      },
-                      {
-                        timePeriod: '19:00',
-                        value: 27500,
-                      },
-                      {
-                        timePeriod: '20:00',
-                        value: 28000,
-                      },
-                      {
-                        timePeriod: '21:00',
-                        value: 29000,
-                      },
-                      {
-                        timePeriod: '22:00',
-                        value: 31000,
-                      },
-                      {
-                        timePeriod: '23:00',
-                        value: 34000,
-                      },
-                      {
-                        timePeriod: '24:00',
-                        value: 36000,
-                      },
-                    ]}
-                    xField="timePeriod"
+                    data={graph_data!}
+                    xField="xAxis"
+                    label={false}
+                    legend={false}
                     yField="value"
+                    tooltip={{
+                      title: (title: string) => {
+                        return `${localize('chart_hour')}: ${title}`;
+                      },
+                      formatter: (datum) => {
+                        return {
+                          name: localize('chart_tooltip'),
+                          value: NumberFormatter.toCurrency(datum.value),
+                        };
+                      },
+                    }}
                     yAxis={{
+                      alias: localize('chart_y_alias'),
+                      animate: true,
+                      tickCount: 8,
+                      nice: true,
                       label: {
                         formatter: (text: string) => {
                           return NumberFormatter.toNumber(parseInt(text));
@@ -231,7 +277,7 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
           <Layout.Content>
             <List>
               {orders!.data.map((order: IOrder) => {
-                return <List.Item>{order.amount}</List.Item>;
+                return <List.Item key={order._id}>{order.amount}</List.Item>;
               })}
             </List>
           </Layout.Content>
@@ -241,7 +287,83 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
   };
 
   render_LOADING = () => {
-    return <div>Loading...</div>;
+    return (
+      <>
+        <Layout>
+          <Layout.Header
+            className={styles.layout__header}
+            style={{ lineHeight: 'normal' }}
+          >
+            <Row align="middle">
+              <Col span={13}>
+                <Skeleton.Input
+                  active
+                  size="large"
+                  block
+                  style={{ borderRadius: 5 }}
+                />
+              </Col>
+              <Col span={3} />
+              <Col span={8} style={{ textAlign: 'right' }}>
+                <Skeleton.Input
+                  size="large"
+                  block
+                  active
+                  style={{ borderRadius: 5 }}
+                />
+              </Col>
+            </Row>
+          </Layout.Header>
+          <Layout.Content className={styles.layout__content}>
+            <Row gutter={24}>
+              <Col span={8}>
+                <Skeleton.Input
+                  block
+                  active
+                  style={{ height: 145, borderRadius: 5 }}
+                />
+              </Col>
+              <Col span={8}>
+                <Skeleton.Input
+                  block
+                  active
+                  style={{ height: 145, borderRadius: 5 }}
+                />
+              </Col>
+              <Col span={8}>
+                <Skeleton.Input
+                  block
+                  active
+                  style={{ height: 145, borderRadius: 5 }}
+                />
+              </Col>
+            </Row>
+            <br />
+            <Row>
+              <Col span={24}>
+                <Skeleton.Input
+                  block
+                  active
+                  style={{ height: 450, borderRadius: 5 }}
+                />
+              </Col>
+            </Row>
+          </Layout.Content>
+        </Layout>
+        <Layout.Sider width="450px" className={styles.layout__sider}>
+          <Layout.Header className={styles.layout__sider__header}>
+            <Skeleton.Input size="large" active />
+
+            <Skeleton.Input size="large" active />
+          </Layout.Header>
+          <Layout.Content>
+            <List>
+              <Skeleton.Input size="large" active />
+            </List>
+          </Layout.Content>
+        </Layout.Sider>
+      </>
+    );
   };
 
   render() {
