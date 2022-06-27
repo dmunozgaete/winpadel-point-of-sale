@@ -5,6 +5,7 @@ const LOCALES = {
 
   statistics_day_sales: 'Monto total del día',
   statistics_cart_sales: 'Total de compras',
+  statistics_accumulated: 'Acumulado última hora',
 
   sider_title: 'Listado de compras',
   sider_subtitle: 'Detalle de compras del día',
@@ -16,5 +17,8 @@ const LOCALES = {
   segmented_today: 'Hoy',
   segmented_week: 'Semana',
   segmented_month: 'Mes',
+
+  date_template: 'dddd DD, HH:mm',
+  product_item_text: '&nbsp;productos por&nbsp;',
 };
 export default LOCALES;

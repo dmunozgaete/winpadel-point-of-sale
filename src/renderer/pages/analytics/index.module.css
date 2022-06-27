@@ -73,7 +73,16 @@
 
 .layout__sider__content {
   composes: bg-primary from "renderer/themes/colors.css";
-  height: calc(100% - 96px - 200px);
+  height: calc(100% - 96px);
   overflow: scroll;
   padding: 0px 0px 16px 0px;
+}
+
+.layout__sider__content__list {
+  padding-left: 24px;
+}
+
+.layout__sider__content__list__item {
+  text-transform: capitalize;
+  cursor: pointer;
 }

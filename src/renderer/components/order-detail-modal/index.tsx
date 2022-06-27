@@ -1,16 +1,6 @@
 import React from 'react';
-import {
-  Button,
-  Drawer,
-  Tag,
-  Row,
-  Col,
-  Layout,
-  Avatar,
-  Tooltip,
-  List,
-} from 'antd';
-import { ShoppingOutlined } from '@ant-design/icons';
+import { Button, Drawer, Row, Col, Layout, Avatar, Tooltip, List } from 'antd';
+import { ShoppingOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import OrdersClient, { IOrder } from 'renderer/clients/OrdersClient';
 import moment from 'moment';
 import { IProductCart } from 'renderer/clients/ProductsClient';
@@ -24,6 +14,7 @@ const localize = i18n(locales);
 interface IProps {
   onClose: () => {};
   order: IOrder;
+  readOnly: boolean;
 }
 interface IState {
   view_mode: 'LOADING' | 'ORDER_READY';
@@ -83,7 +74,7 @@ export default class OrderDetailModal extends React.Component<IProps, IState> {
 
   render_ORDER_READY = () => {
     const { cart } = this.state;
-    const { order } = this.props;
+    const { order, readOnly } = this.props;
 
     return (
       <>
@@ -196,25 +187,40 @@ export default class OrderDetailModal extends React.Component<IProps, IState> {
             style={{ textAlign: 'center' }}
             className={styles.drawer__footer__actions}
           >
-            <Button
-              className={styles.drawer__footer__actions__button}
-              size="large"
-              icon={<ShoppingOutlined />}
-              danger
-              type="primary"
-              shape="round"
-              onClick={() => this.onUpdateToPaidClickHandler()}
-            >
-              {localize('mark_as_paid')}
-            </Button>
-
-            <Button
-              type="link"
-              danger
-              onClick={() => this.onCloseClickHandler()}
-            >
-              {localize('close')}
-            </Button>
+            {readOnly === false ? (
+              <>
+                <Button
+                  className={styles.drawer__footer__actions__button}
+                  size="large"
+                  icon={<ShoppingOutlined />}
+                  danger
+                  type="primary"
+                  shape="round"
+                  onClick={() => this.onUpdateToPaidClickHandler()}
+                >
+                  {localize('mark_as_paid')}
+                </Button>
+                <Button
+                  type="link"
+                  danger
+                  onClick={() => this.onCloseClickHandler()}
+                >
+                  {localize('close')}
+                </Button>
+              </>
+            ) : (
+              <Button
+                className={styles.drawer__footer__actions__button}
+                size="large"
+                icon={<CloseCircleOutlined />}
+                block
+                type="primary"
+                shape="round"
+                onClick={() => this.onCloseClickHandler()}
+              >
+                {localize('close')}
+              </Button>
+            )}
           </div>
         </Layout.Footer>
       </>

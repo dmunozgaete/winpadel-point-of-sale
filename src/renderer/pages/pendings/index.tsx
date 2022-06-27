@@ -276,6 +276,7 @@ export default class PendingsPage extends React.Component<{}, IState> {
         </Layout.Sider>
         {show_order_detail ? (
           <OrderDetailModal
+            readOnly={false}
             order={order_detail_data!}
             onClose={this.onCloseDetailModalHandler}
           />

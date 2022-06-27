@@ -8,6 +8,7 @@ import {
   List,
   Segmented,
   Skeleton,
+  Avatar,
 } from 'antd';
 import { DollarOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { Column } from '@ant-design/plots';
@@ -17,6 +18,7 @@ import OrdersClient, { IOrder } from 'renderer/clients/OrdersClient';
 import IPouchDbResponse from 'renderer/lib/IPouchDbResponse';
 import { SegmentedValue } from 'antd/lib/segmented';
 import moment from 'moment';
+import OrderDetailModal from 'renderer/components/order-detail-modal';
 import styles from './index.module.css';
 import i18n from '../../lib/i18n';
 import locales from './locales';
@@ -31,6 +33,8 @@ interface IState {
     acumulated: number;
   };
   graph_data: IGraphData[] | undefined;
+  show_order_detail: boolean;
+  order_detail_data: IOrder | undefined;
 }
 
 interface IGraphData {
@@ -49,6 +53,9 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
       acumulated: 0,
     },
     graph_data: undefined,
+
+    show_order_detail: false,
+    order_detail_data: undefined,
   };
 
   componentDidMount() {
@@ -142,8 +149,75 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
     }, 500);
   };
 
+  onOrderClickHandler = async (order: IOrder) => {
+    this.setState({
+      show_order_detail: true,
+      order_detail_data: order,
+    });
+  };
+
+  onCloseDetailModalHandler = async () => {
+    this.setState({
+      show_order_detail: false,
+      order_detail_data: undefined,
+    });
+  };
+
+  render_ORDER_LIST = () => {
+    const { orders, show_order_detail, order_detail_data } = this.state;
+    return (
+      <>
+        <List
+          itemLayout="horizontal"
+          className={styles.layout__sider__content__list}
+        >
+          {orders!.data.map((order: IOrder) => {
+            return (
+              <List.Item onClick={() => this.onOrderClickHandler(order)}>
+                <List.Item.Meta
+                  className={styles.layout__sider__content__list__item}
+                  avatar={
+                    <Avatar
+                      style={{
+                        height: 'auto',
+                        paddingTop: 6,
+                      }}
+                      shape="square"
+                      src={order.user.avatar}
+                    />
+                  }
+                  title={moment(order.created_at).format(
+                    localize('date_template')
+                  )}
+                  description={
+                    <span style={{ textTransform: 'none' }}>
+                      <b>{order.product_quantity}</b>
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: localize('product_item_text'),
+                        }}
+                      />
+                      {NumberFormatter.toCurrency(order.amount)}
+                    </span>
+                  }
+                />
+              </List.Item>
+            );
+          })}
+        </List>
+        {show_order_detail ? (
+          <OrderDetailModal
+            readOnly
+            order={order_detail_data!}
+            onClose={this.onCloseDetailModalHandler}
+          />
+        ) : null}
+      </>
+    );
+  };
+
   render_GRAPH_TODAY = () => {
-    const { statistics, orders, graph_data } = this.state;
+    const { statistics, graph_data } = this.state;
 
     return (
       <>
@@ -209,7 +283,7 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
               <Col span={8}>
                 <Card>
                   <Statistic
-                    title={localize('statistics_cart_sales')}
+                    title={localize('statistics_accumulated')}
                     value={statistics.acumulated}
                     precision={0}
                     prefix={<ShoppingOutlined />}
@@ -243,9 +317,7 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
                     }}
                     yAxis={{
                       alias: localize('chart_y_alias'),
-                      animate: true,
                       tickCount: 8,
-                      nice: true,
                       label: {
                         formatter: (text: string) => {
                           return NumberFormatter.toNumber(parseInt(text));
@@ -274,12 +346,8 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
               </span>
             </div>
           </Layout.Header>
-          <Layout.Content>
-            <List>
-              {orders!.data.map((order: IOrder) => {
-                return <List.Item key={order._id}>{order.amount}</List.Item>;
-              })}
-            </List>
+          <Layout.Content className={styles.layout__sider__content}>
+            {this.render_ORDER_LIST()}
           </Layout.Content>
         </Layout.Sider>
       </>

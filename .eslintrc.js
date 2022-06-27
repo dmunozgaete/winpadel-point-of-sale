@@ -17,6 +17,7 @@ module.exports = {
     '@typescript-eslint/no-empty-interface': 'off',
     '@typescript-eslint/no-empty-function': ['off'],
     'react/state-in-constructor': ['off', 'never'],
+    'react/no-danger': 'off',
     'class-methods-use-this': 'off',
     'no-debugger': 'off',
     'no-underscore-dangle': 'off',
