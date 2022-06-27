@@ -86,3 +86,9 @@
   text-transform: capitalize;
   cursor: pointer;
 }
+
+.layout__sider__content__list__item__price {
+  padding-right: 12px;
+  font-size: 1.2em;
+  color: #ff4d4f;
+}

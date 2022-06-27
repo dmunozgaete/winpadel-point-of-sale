@@ -118,15 +118,20 @@ export class OrdersClient implements WithBootedClient {
    * @param offset offset index
    * @param limit records limit
    */
-  async getAllByDay(
-    day: number,
+  async getAllByDays(
+    days: number[],
     offset: number,
     limit: number
   ): Promise<IPouchDbResponse<IOrder>> {
     const results = await this.db!.find({
       skip: offset,
       limit,
-      selector: { day, status: 'PAID' },
+      selector: {
+        day: {
+          $in: days,
+        },
+        status: 'PAID',
+      },
       // fields: ['_id', 'name'],
       // sort: ['status'],
     });
