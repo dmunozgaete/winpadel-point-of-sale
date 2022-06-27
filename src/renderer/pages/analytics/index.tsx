@@ -10,7 +10,11 @@ import {
   Skeleton,
   Avatar,
 } from 'antd';
-import { DollarOutlined, ShoppingOutlined } from '@ant-design/icons';
+import {
+  DollarOutlined,
+  ShoppingOutlined,
+  ArrowUpOutlined,
+} from '@ant-design/icons';
 import { Column } from '@ant-design/plots';
 
 import NumberFormatter from 'renderer/lib/formatters/NumberFormatter';
@@ -365,7 +369,7 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
                     title={localize('statistics_accumulated')}
                     value={statistics.acumulated}
                     precision={0}
-                    prefix={<ShoppingOutlined />}
+                    prefix={<ArrowUpOutlined />}
                     groupSeparator="."
                     suffix=""
                   />
@@ -488,7 +492,7 @@ export default class AnalyticsPage extends React.Component<{}, IState> {
                     title={localize('statistics_week_accumulated')}
                     value={statistics.acumulated}
                     precision={0}
-                    prefix={<ShoppingOutlined />}
+                    prefix={<ArrowUpOutlined />}
                     groupSeparator="."
                     suffix=""
                   />
